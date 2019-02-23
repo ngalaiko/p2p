@@ -15,9 +15,9 @@ func init() {
 
 // Peer is an instance of the same app.
 type Peer struct {
-	ID         string
-	KnownPeers *peersList
-	Addrs      *addrsList
+	ID         string     `json:"id"`
+	KnownPeers *peersList `json:"known_peers"`
+	Addrs      *addrsList `json:"addrs"`
 }
 
 // New is a peer constructor.

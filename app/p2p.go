@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ngalayko/p2p/app/discovery"
@@ -10,6 +11,7 @@ import (
 	"github.com/ngalayko/p2p/app/discovery/udp6"
 	"github.com/ngalayko/p2p/app/logger"
 	"github.com/ngalayko/p2p/app/peers"
+	"github.com/ngalayko/p2p/app/ui"
 )
 
 // Messenger is a single instance of a p2p messenger.
@@ -18,6 +20,7 @@ type Messenger struct {
 
 	logger    *logger.Logger
 	discovery discovery.Discovery
+	ui        *ui.UI
 }
 
 // New is a messenger constructor.
@@ -25,6 +28,8 @@ func New(
 	logLevel logger.Level,
 	udp4Multicast string,
 	udp6Multicast string,
+	port string,
+	uiPort string,
 	discroverInterval time.Duration,
 ) *Messenger {
 	l := logger.New(logLevel)
@@ -33,18 +38,17 @@ func New(
 		self:   self,
 		logger: l,
 		discovery: merge.New(
-			udp6.New(l, udp6Multicast, discroverInterval, self),
-			udp4.New(l, udp4Multicast, discroverInterval, self),
+			udp6.New(l, fmt.Sprintf("%s:%s", udp6Multicast, port), discroverInterval, self),
+			udp4.New(l, fmt.Sprintf("%s:%s", udp4Multicast, port), discroverInterval, self),
 		),
+		ui: ui.New(l, self, fmt.Sprintf("127.0.0.1:%s", uiPort)),
 	}
 }
 
 // Start starts a messanger instance.
 func (m *Messenger) Start() error {
 	go m.watchPeers()
-	for {
-	}
-	return nil
+	return m.ui.ListenAndServe()
 }
 
 func (m *Messenger) watchPeers() {

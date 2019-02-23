@@ -14,13 +14,14 @@ func newAddrsList() *addrsList {
 }
 
 // Add adds a new address to the peer.
-func (a *addrsList) Add(addr net.Addr) {
+func (a *addrsList) Add(addr net.Addr) bool {
 	if _, known := a.byIP[addr.String()]; known {
-		return
+		return false
 	}
 
 	a.byIP[addr.String()] = addr
 	a.list = append(a.list, addr)
+	return true
 }
 
 // List returns known addres list.

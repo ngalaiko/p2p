@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>P2P Chat</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="./js/index.js"></script>
+    <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+    <div class="container-fluid min-100 d-flex flex-column">
+        <nav class="navbar navbar-light bg-light">
+            <a class="navbar-brand">
+                P2P chat
+            </a>
+        </nav>
+        <div class="row no-gutters flex-grow-1">
+            <div class="col-3">
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Dave
+                        <span class="badge badge-primary badge-pill">14</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center active">Steve</li>
+                </ul>
+            </div>
+            <div class="col">
+                <div class="container min-100 d-flex flex-column">
+                    <div class="row no-gutters flex-grow-1">
+                        <ul class="list-group list-group-flush flex-grow-1">
+                            <li class="list-group-item text-left">Hi!</li>
+                            <li class="list-group-item text-right">Hi! How are you?</li>
+                        </ul>
+                    </div>
+                    <div class="row py-3 no-gutters">
+                        <div class="col">
+                            <div class="input-group">
+                            <input type="text" class="form-control input-lg" id="search-church" placeholder="Enter your message">
+                            <span class="input-group-btn">
+                                <button class="btn btn-primary type="submit">Send</button>
+                            </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
