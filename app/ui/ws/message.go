@@ -7,27 +7,27 @@ type messageType string
 
 // known MessageTypes
 const (
-	messageTypeInvalid      messageType = ""
-	messageTypeInit         messageType = "init"
-	messageTypePeersUpdated messageType = "peers_update"
+	messageTypeInvalid    messageType = ""
+	messageTypeInit       messageType = "init"
+	messageTypePeersAdded messageType = "peer_added"
 )
 
 // message is a structure for client-server communication.
 type message struct {
 	Type messageType `json:"type"`
-	Self *peers.Peer `json:"self"`
+	Peer *peers.Peer `json:"peer"`
 }
 
 func newInitMessage(p *peers.Peer) *message {
 	return &message{
 		Type: messageTypeInit,
-		Self: p,
+		Peer: p,
 	}
 }
 
-func newPeersUpdateMessage(p *peers.Peer) *message {
+func newPeersAddedMessage(p *peers.Peer) *message {
 	return &message{
-		Type: messageTypePeersUpdated,
-		Self: p,
+		Type: messageTypePeersAdded,
+		Peer: p,
 	}
 }

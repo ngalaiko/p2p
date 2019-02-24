@@ -11,14 +11,14 @@ type peersList struct {
 
 	list    []*Peer
 	byID    map[string]*Peer
-	updated chan bool
+	updated chan *Peer
 }
 
 func newPeersList() *peersList {
 	return &peersList{
 		guard:   &sync.RWMutex{},
 		byID:    map[string]*Peer{},
-		updated: make(chan bool),
+		updated: make(chan *Peer),
 	}
 }
 
@@ -28,7 +28,7 @@ func (p peersList) MarshalJSON() ([]byte, error) {
 }
 
 // Updated returns a chan that closes every time list gets updated.
-func (p *peersList) Updated() <-chan bool {
+func (p *peersList) Updated() <-chan *Peer {
 	p.guard.RLock()
 	defer p.guard.RUnlock()
 	return p.updated
@@ -43,7 +43,7 @@ func (p *peersList) Add(peer *Peer) {
 	if !ok {
 		p.list = append(p.list, peer)
 		p.byID[peer.ID] = peer
-		p.sendUpdate()
+		p.updated <- peer
 		return
 	}
 
@@ -53,13 +53,8 @@ func (p *peersList) Add(peer *Peer) {
 	}
 
 	if wasUpdated {
-		p.sendUpdate()
+		p.updated <- peer
 	}
-}
-
-func (p *peersList) sendUpdate() {
-	close(p.updated)
-	p.updated = make(chan bool)
 }
 
 // Map retuns a map of peers.

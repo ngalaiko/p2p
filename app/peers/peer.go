@@ -87,14 +87,7 @@ func (p *Peer) Marshal() ([]byte, error) {
 
 // Unmarshal is a marshal function to use when sending peer info over a network.
 func (p *Peer) Unmarshal(data []byte) error {
-	if err := json.Unmarshal(data, p); err != nil {
-		return err
-	}
-	if p.Addrs == nil {
-		p.Addrs = newAddrsList()
-	}
-	if p.KnownPeers == nil {
-		p.KnownPeers = newPeersList()
-	}
-	return nil
+	p.Addrs = newAddrsList()
+	p.KnownPeers = newPeersList()
+	return json.Unmarshal(data, p)
 }
