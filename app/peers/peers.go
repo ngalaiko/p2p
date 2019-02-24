@@ -43,14 +43,17 @@ func (p *peersList) Add(peer *Peer) {
 	if !ok {
 		p.list = append(p.list, peer)
 		p.byID[peer.ID] = peer
+		p.sendUpdate()
 		return
 	}
 
+	wasUpdated := false
 	for _, addr := range peer.Addrs.List() {
-		if known.Addrs.Add(addr) {
-			p.sendUpdate()
-		}
+		wasUpdated = wasUpdated || known.Addrs.Add(addr)
+	}
 
+	if wasUpdated {
+		p.sendUpdate()
 	}
 }
 

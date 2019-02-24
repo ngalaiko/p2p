@@ -9,13 +9,12 @@ import (
 
 const idLen = 32
 
-func init() {
-	rand.Seed(time.Now().Unix())
-}
+var r = rand.New(rand.NewSource(time.Now().Unix()))
 
 // Peer is an instance of the same app.
 type Peer struct {
 	ID         string     `json:"id"`
+	Name       string     `json:"name"`
 	KnownPeers *peersList `json:"known_peers"`
 	Addrs      *addrsList `json:"addrs"`
 }
@@ -23,9 +22,10 @@ type Peer struct {
 // New is a peer constructor.
 func New() *Peer {
 	idBytes := make([]byte, idLen)
-	_, _ = rand.Read(idBytes)
+	_, _ = r.Read(idBytes)
 	return &Peer{
 		ID:         hex.EncodeToString(idBytes),
+		Name:       newName(r),
 		KnownPeers: newPeersList(),
 		Addrs:      newAddrsList(),
 	}
