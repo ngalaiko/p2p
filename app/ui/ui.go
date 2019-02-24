@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ngalayko/p2p/app/logger"
+	"github.com/ngalayko/p2p/app/messages"
 	"github.com/ngalayko/p2p/app/peers"
 	"github.com/ngalayko/p2p/app/ui/ws"
 )
@@ -20,6 +21,7 @@ func New(
 	log *logger.Logger,
 	self *peers.Peer,
 	addr string,
+	msgHandler *messages.Handler,
 ) *UI {
 	log = log.Prefix("ui")
 
@@ -28,7 +30,7 @@ func New(
 		server: &http.Server{
 			Addr: addr,
 		},
-		ws: ws.New(log, self),
+		ws: ws.New(log, self, msgHandler),
 	}
 	u.server.Handler = u.handler()
 	return u

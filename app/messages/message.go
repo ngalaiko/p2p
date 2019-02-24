@@ -1,21 +1,20 @@
 package messages
 
+import "github.com/ngalayko/p2p/app/peers"
+
 // Type is a message type.
-type Type uint
+type Type string
 
 // Supported types.
 const (
-	TypeUndefined = iota
-	TypeText
+	TypeUndefined Type = ""
+	TypeText      Type = "text"
 )
 
 // Message is a single message.
 type Message struct {
-	Type    Type   `json:"type"`
-	Payload []byte `json:"payload"`
-}
-
-// Text is a text message.
-type Text struct {
-	Data []byte
+	To   []*peers.Peer `json:"to"`
+	From *peers.Peer   `json:"from"`
+	Type Type          `json:"type"`
+	Text string        `json:"text,omitempty"`
 }

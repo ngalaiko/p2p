@@ -148,11 +148,13 @@ func (d *Discovery) listen(ctx context.Context, out chan *peers.Peer) {
 				d.log.Error("can't unmarshal peer data: %s", err)
 				continue
 			}
-			peer.Addrs.Add(src)
+
+			ip := src.(*net.UDPAddr).IP
+			peer.Addrs.Add(ip)
 
 			out <- peer
 
-			d.log.Debug("found a peer %s", peer.ID)
+			d.log.Debug("found a peer at %s", ip)
 		}
 	}
 }

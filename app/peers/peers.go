@@ -24,7 +24,9 @@ func newPeersList() *peersList {
 
 // MarshalJSON returns json.
 func (p peersList) MarshalJSON() ([]byte, error) {
-	return json.Marshal(p.Map())
+	p.guard.RLock()
+	defer p.guard.RUnlock()
+	return json.Marshal(p.byID)
 }
 
 // Updated returns a chan that closes every time list gets updated.
@@ -57,16 +59,16 @@ func (p *peersList) Add(peer *Peer) {
 	}
 }
 
-// Map retuns a map of peers.
-func (p *peersList) Map() map[string]*Peer {
-	p.guard.Lock()
-	defer p.guard.Unlock()
-	return p.byID
+// Get returns peer by id.
+func (p *peersList) Get(id string) *Peer {
+	p.guard.RLock()
+	defer p.guard.RUnlock()
+	return p.byID[id]
 }
 
 // List retuns a list of peers.
 func (p *peersList) List() []*Peer {
-	p.guard.Lock()
-	defer p.guard.Unlock()
+	p.guard.RLock()
+	defer p.guard.RUnlock()
 	return p.list
 }

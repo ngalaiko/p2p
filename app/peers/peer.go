@@ -20,7 +20,7 @@ const idLen = 32
 type Peer struct {
 	ID          string          `json:"id"`
 	Name        string          `json:"name"`
-	KnownPeers  *peersList      `json:"known_peers"`
+	KnownPeers  *peersList      `json:"-"`
 	Addrs       *addrsList      `json:"-"`
 	Certificate tls.Certificate `json:"-"`
 }

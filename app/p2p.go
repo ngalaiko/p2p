@@ -40,6 +40,7 @@ func New(
 	if err != nil {
 		log.Panic("can't initialize peer: %s", err)
 	}
+	msgHandler := messages.New(log, self, port)
 	return &Messenger{
 		self:   self,
 		logger: log,
@@ -47,15 +48,19 @@ func New(
 			udp6.New(log, fmt.Sprintf("%s:%s", udp6Multicast, discoveryPort), discroverInterval, self),
 			udp4.New(log, fmt.Sprintf("%s:%s", udp4Multicast, discoveryPort), discroverInterval, self),
 		),
-		ui:         ui.New(log, self, fmt.Sprintf("127.0.0.1:%s", uiPort)),
-		msgHandler: messages.New(log, self, port),
+		ui:         ui.New(log, self, fmt.Sprintf("127.0.0.1:%s", uiPort), msgHandler),
+		msgHandler: msgHandler,
 	}
 }
 
 // Start starts a messanger instance.
 func (m *Messenger) Start() error {
 	go m.watchPeers()
-	go m.msgHandler.ListenAndServe()
+	go func() {
+		if err := m.msgHandler.ListenAndServe(); err != nil {
+			m.logger.Panic("message server: %s", err)
+		}
+	}()
 	return m.ui.ListenAndServe()
 }
 

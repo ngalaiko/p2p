@@ -4,7 +4,7 @@ function handleMessage(conn, msg) {
   switch (msg.type) {
     case "init":
       addPeer(msg.peer, true)
-      selectPeer(msg.peer)    
+      selectPeer(msg.peer)
 
       for (id in msg.peer.known_peers) {
         addPeer(msg.peer.known_peers[id], false)
@@ -18,6 +18,26 @@ function handleMessage(conn, msg) {
   }
 }
 
+function sendMessage(conn) {
+  var msg = document.getElementById("message")
+
+  if (msg.value === "") {
+    return
+  }
+
+  let recipient = document.querySelector(".peer.active")
+
+  var message = {
+    type: "text",
+    text: msg.value,
+    to: [recipient.peer],
+  }
+
+  conn.send(JSON.stringify(message))
+
+  msg.value = ""
+}
+
 function addPeer(peer, isSelf) {
   if (document.getElementById('peer-'+peer.id) !== null) {
     return 
@@ -25,6 +45,7 @@ function addPeer(peer, isSelf) {
 
   if (isSelf) {
     peer.name += " (me)"
+    peer.self = true
   }
 
   appendPeer(peer)
@@ -35,8 +56,9 @@ function appendPeer(peer) {
   peerEntry.className = "list-group-item d-flex justify-content-between align-items-center peer"
   peerEntry.id = "peer-" + peer.id
   peerEntry.innerHTML = peer.name
+  peerEntry.peer = peer
   peerEntry.onclick = function() {
-    selectPeer(peer)    
+    selectPeer(peer)
   }
 
   document.getElementById("peers").appendChild(peerEntry)
@@ -121,6 +143,9 @@ function connectWs() {
             handleMessage(conn, JSON.parse(messages[i]))
         }
     };
+  document.getElementById("send").onclick = function() {
+    sendMessage(conn)
+  }
 }
 
 window.onload = connectWs

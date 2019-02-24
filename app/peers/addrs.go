@@ -1,20 +1,28 @@
 package peers
 
-import "net"
+import (
+	"net"
+	"sync"
+)
 
 type addrsList struct {
-	list []net.Addr
-	byIP map[string]net.Addr
+	guard *sync.RWMutex
+	list  []net.IP
+	byIP  map[string]net.IP
 }
 
 func newAddrsList() *addrsList {
 	return &addrsList{
-		byIP: map[string]net.Addr{},
+		guard: &sync.RWMutex{},
+		byIP:  map[string]net.IP{},
 	}
 }
 
 // Add adds a new address to the peer.
-func (a *addrsList) Add(addr net.Addr) bool {
+func (a *addrsList) Add(addr net.IP) bool {
+	a.guard.Lock()
+	defer a.guard.Unlock()
+
 	if _, known := a.byIP[addr.String()]; known {
 		return false
 	}
@@ -25,6 +33,8 @@ func (a *addrsList) Add(addr net.Addr) bool {
 }
 
 // List returns known addres list.
-func (a *addrsList) List() []net.Addr {
+func (a *addrsList) List() []net.IP {
+	a.guard.RLock()
+	defer a.guard.RUnlock()
 	return a.list
 }
