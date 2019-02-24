@@ -49,10 +49,9 @@ func (ws *WebSocket) watchUpdates(conn *websocket.Conn) {
 		select {
 		case <-ws.self.KnownPeers.Updated():
 			if err := conn.WriteJSON(newPeersUpdateMessage(ws.self)); err != nil {
-				ws.log.Error("error writing init message: %s", err)
+				ws.log.Error("error writing update message: %s", err)
 				return
 			}
 		}
 	}
-
 }

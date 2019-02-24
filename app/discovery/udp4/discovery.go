@@ -62,7 +62,7 @@ func (d *Discovery) Discover(ctx context.Context) <-chan *peers.Peer {
 func (d *Discovery) broadcast(ctx context.Context, interval time.Duration) {
 	c, err := net.ListenUDP("udp4", d.addr)
 	if err != nil {
-		d.log.Error("can't create listen packet", err)
+		d.log.Error("can't create listen packet: %s", err)
 		return
 	}
 	defer c.Close()
@@ -143,7 +143,7 @@ func (d *Discovery) listen(ctx context.Context, out chan *peers.Peer) {
 				continue
 			}
 
-			peer := peers.New()
+			peer := &peers.Peer{}
 			if err := peer.Unmarshal(buf[:n]); err != nil {
 				d.log.Error("can't unmarshal peer data: %s", err)
 				continue
