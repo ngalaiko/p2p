@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"sync"
@@ -42,7 +43,7 @@ func New(
 	port string,
 ) *Handler {
 
-	creds := credentials.NewServerTLSFromCert(&self.Certificate)
+	creds := credentials.NewServerTLSFromCert(self.Certificate)
 
 	grpcServer := grpc.NewServer(
 		grpc.Creds(creds),
@@ -68,7 +69,7 @@ func New(
 }
 
 // ListenAndServe starts server.
-func (h *Handler) ListenAndServe(ctx context.Context) error {
+func (h *Handler) Listen(ctx context.Context) error {
 	addr := fmt.Sprintf("0.0.0.0:%s", h.port)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -100,7 +101,13 @@ func (h *Handler) getClient(ctx context.Context, peer *peers.Peer) (*client.Clie
 
 	h.clientsResolver.Add(peer)
 
-	grpcClient, err := client.Connect(ctx, h.logger, h.creds, peer)
+	cp := x509.NewCertPool()
+	if !cp.AppendCertsFromPEM(peer.PublicCrt) {
+		return nil, fmt.Errorf("failed to append certificates")
+	}
+	creds := credentials.NewClientTLSFromCert(cp, "")
+
+	grpcClient, err := client.Connect(ctx, h.logger, creds, peer)
 	if err != nil {
 		return nil, fmt.Errorf("can't create client: %s", err)
 	}

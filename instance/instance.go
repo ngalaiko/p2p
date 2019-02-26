@@ -56,7 +56,7 @@ func New(
 func (i *Instance) Start(ctx context.Context) error {
 	go i.watchPeers(ctx)
 	go func() {
-		if err := i.msgHandler.ListenAndServe(ctx); err != nil {
+		if err := i.msgHandler.Listen(ctx); err != nil {
 			i.logger.Panic("message server: %s", err)
 		}
 	}()

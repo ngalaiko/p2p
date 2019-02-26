@@ -13,11 +13,13 @@ const idLen = 32
 
 // Peer is an instance of the same app.
 type Peer struct {
-	ID          string          `json:"id"`
-	Name        string          `json:"name"`
-	KnownPeers  *peersList      `json:"-"`
-	Addrs       *addrsList      `json:"-"`
-	Certificate tls.Certificate `json:"-"`
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	KnownPeers *peersList `json:"-"`
+	Addrs      *addrsList `json:"-"`
+
+	PublicCrt   []byte           `json:"public_key"`
+	Certificate *tls.Certificate `json:"-"`
 }
 
 // New is a peer constructor.
@@ -35,10 +37,12 @@ func New() (*Peer, error) {
 		KnownPeers: newPeersList(),
 		Addrs:      newAddrsList(),
 	}
-	p.Certificate, err = generateCertificate(p, r)
+
+	p.PublicCrt, p.Certificate, err = generateCertificate(p, r, 4096, time.Now().AddDate(1, 0, 0))
 	if err != nil {
-		return nil, fmt.Errorf("error generating certificate: %s", err)
+		return nil, fmt.Errorf("can't generate CA certificate: %s", err)
 	}
+
 	return p, nil
 }
 
