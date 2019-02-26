@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package chat;
+
+import "google/protobuf/timestamp.proto";
+
+service Chat {
+    rpc Stream(stream Message) returns (stream MessageStatus) {}
+}
+
+message Message {
+    google.protobuf.Timestamp timestamp = 1;
+    
+    string id = 2;
+
+    oneof payload {
+        string text  = 5;
+    }
+}
+
+message MessageStatus {
+    string id = 1;
+
+    enum status {
+        INVALID = 0;
+        DELIVERED = 1;
+        READ = 2;
+    }
+}
