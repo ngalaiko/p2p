@@ -18,9 +18,8 @@ type Builder struct {
 }
 
 // New returns a new resolver for the peer.
-func New(port string) *Builder {
+func New() *Builder {
 	return &Builder{
-		port:       port,
 		guard:      &sync.RWMutex{},
 		addrsStore: map[string][]string{},
 	}
@@ -31,7 +30,7 @@ func (b *Builder) Add(peer *peers.Peer) {
 	list := peer.Addrs.List()
 	addrs := make([]string, 0, len(list))
 	for _, addr := range list {
-		addrs = append(addrs, makeAddr(addr, b.port))
+		addrs = append(addrs, makeAddr(addr, peer.Port))
 	}
 
 	b.guard.Lock()

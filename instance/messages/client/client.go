@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/ngalayko/p2p/instance/logger"
-	"github.com/ngalayko/p2p/instance/messages"
 	"github.com/ngalayko/p2p/instance/messages/proto/chat"
 	"github.com/ngalayko/p2p/instance/peers"
 )
@@ -51,14 +50,14 @@ func Connect(
 	return c, nil
 }
 
-// Send sends a message.
-func (c *Client) Send(ctx context.Context, m *messages.Message) error {
+// SendText sends a text message.
+func (c *Client) SendText(ctx context.Context, text string) error {
 	streamClient, err := chat.NewChatClient(c.conn).Stream(ctx)
 	if err != nil {
 		return fmt.Errorf("can't open stream: %s", err)
 	}
 
-	if err := streamClient.Send(makeMessage(m)); err != nil {
+	if err := streamClient.Send(makeText(text)); err != nil {
 		return fmt.Errorf("can't send a message: %s", err)
 	}
 
@@ -67,18 +66,14 @@ func (c *Client) Send(ctx context.Context, m *messages.Message) error {
 	return nil
 }
 
-func makeMessage(msg *messages.Message) *chat.Message {
+func makeText(text string) *chat.Message {
 	now := time.Now()
-	m := &chat.Message{
+	return &chat.Message{
 		Timestamp: &timestamp.Timestamp{
 			Seconds: now.Unix(),
 		},
+		Payload: &chat.Message_Text{
+			Text: text,
+		},
 	}
-	switch msg.Type {
-	case messages.TypeText:
-		m.Payload = &chat.Message_Text{
-			Text: msg.Text,
-		}
-	}
-	return m
 }

@@ -16,7 +16,7 @@ var (
 	port              = flag.String("port", "30000", "port to listen for messages")
 	discoveryPort     = flag.String("discovery_port", "30001", "port to discover other peers")
 	uiPort            = flag.String("ui_port", "30001", "port to serve ui interface")
-	discoveryInterval = flag.Duration("discovery_interval", time.Second, "interval to send discovery broadcast")
+	discoveryInterval = flag.Duration("discovery_interval", 1*time.Second, "interval to send discovery broadcast")
 )
 
 func main() {

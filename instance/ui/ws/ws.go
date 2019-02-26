@@ -8,7 +8,6 @@ import (
 
 	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/messages"
-	"github.com/ngalayko/p2p/instance/messages/handler"
 	"github.com/ngalayko/p2p/instance/peers"
 )
 
@@ -17,14 +16,14 @@ type WebSocket struct {
 	log        *logger.Logger
 	self       *peers.Peer
 	upgrader   *websocket.Upgrader
-	msgHandler *handler.Handler
+	msgHandler *messages.Handler
 }
 
 // New is returns new websocket handler.
 func New(
 	log *logger.Logger,
 	self *peers.Peer,
-	msgHandler *handler.Handler,
+	msgHandler *messages.Handler,
 ) *WebSocket {
 	return &WebSocket{
 		log:        log.Prefix("ui-ws"),
@@ -67,18 +66,12 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		msg := &messages.Message{}
 		switch m.Type {
 		case messageTypeText:
-			msg.Type = messages.TypeText
-			msg.Text = m.Text
-		default:
-			msg.Type = messages.TypeInvalid
-		}
-
-		if err := ws.msgHandler.Send(r.Context(), msg, m.Peer); err != nil {
-			ws.log.Error("can't send message: %s", err)
-			continue
+			if err := ws.msgHandler.SendText(r.Context(), m.Text, m.Peer.ID); err != nil {
+				ws.log.Error("can't send message: %s", err)
+				continue
+			}
 		}
 	}
 }

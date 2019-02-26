@@ -13,17 +13,20 @@ const idLen = 32
 
 // Peer is an instance of the same app.
 type Peer struct {
-	ID         string     `json:"id"`
-	Name       string     `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Port string `json:"port"`
+
 	KnownPeers *peersList `json:"-"`
-	Addrs      *addrsList `json:"-"`
+
+	Addrs *addrsList `json:"-"`
 
 	PublicCrt   []byte           `json:"public_key"`
 	Certificate *tls.Certificate `json:"-"`
 }
 
 // New is a peer constructor.
-func New() (*Peer, error) {
+func New(port string) (*Peer, error) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 
 	idBytes := make([]byte, idLen)
@@ -31,11 +34,13 @@ func New() (*Peer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error reading random bytes: %s", err)
 	}
+
 	p := &Peer{
 		ID:         hex.EncodeToString(idBytes),
 		Name:       newName(r),
 		KnownPeers: newPeersList(),
 		Addrs:      newAddrsList(),
+		Port:       port,
 	}
 
 	p.PublicCrt, p.Certificate, err = generateCertificate(p, r, 4096, time.Now().AddDate(1, 0, 0))

@@ -9,7 +9,7 @@ import (
 	"github.com/ngalayko/p2p/instance/discovery/merge"
 	"github.com/ngalayko/p2p/instance/discovery/udp4"
 	"github.com/ngalayko/p2p/instance/logger"
-	"github.com/ngalayko/p2p/instance/messages/handler"
+	"github.com/ngalayko/p2p/instance/messages"
 	"github.com/ngalayko/p2p/instance/peers"
 	"github.com/ngalayko/p2p/instance/ui"
 )
@@ -20,7 +20,7 @@ type Instance struct {
 
 	logger     *logger.Logger
 	discovery  discovery.Discovery
-	msgHandler *handler.Handler
+	msgHandler *messages.Handler
 	ui         *ui.UI
 }
 
@@ -35,11 +35,13 @@ func New(
 	discroverInterval time.Duration,
 ) *Instance {
 	log := logger.New(logLevel)
-	self, err := peers.New()
+
+	self, err := peers.New(port)
 	if err != nil {
 		log.Panic("can't initialize peer: %s", err)
 	}
-	msgHandler := handler.New(log, self, port)
+	msgHandler := messages.NewHandler(log, self, port)
+
 	return &Instance{
 		self:   self,
 		logger: log,

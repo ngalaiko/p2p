@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ngalayko/p2p/instance/logger"
-	"github.com/ngalayko/p2p/instance/messages/handler"
+	"github.com/ngalayko/p2p/instance/messages"
 	"github.com/ngalayko/p2p/instance/peers"
 	"github.com/ngalayko/p2p/instance/ui/ws"
 )
@@ -21,7 +21,7 @@ func New(
 	log *logger.Logger,
 	self *peers.Peer,
 	addr string,
-	msgHandler *handler.Handler,
+	msgHandler *messages.Handler,
 ) *UI {
 	log = log.Prefix("ui")
 

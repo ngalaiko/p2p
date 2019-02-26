@@ -1,12 +1,9 @@
 package server
 
 import (
-	"fmt"
 	"io"
-	"time"
 
 	"github.com/ngalayko/p2p/instance/logger"
-	"github.com/ngalayko/p2p/instance/messages"
 	"github.com/ngalayko/p2p/instance/messages/proto/chat"
 )
 
@@ -14,7 +11,7 @@ import (
 type Server struct {
 	logger *logger.Logger
 
-	out chan *messages.Message
+	out chan *chat.Message
 }
 
 // New is server constructor.
@@ -23,7 +20,7 @@ func New(
 ) *Server {
 	return &Server{
 		logger: log.Prefix("grpc-server"),
-		out:    make(chan *messages.Message),
+		out:    make(chan *chat.Message),
 	}
 }
 
@@ -36,7 +33,7 @@ func (s *Server) Stream(srv chat.Chat_StreamServer) error {
 }
 
 // Received returns channel with incoming messages.
-func (s *Server) Received() <-chan *messages.Message {
+func (s *Server) Received() <-chan *chat.Message {
 	return s.out
 }
 
@@ -51,24 +48,9 @@ func (s *Server) listen(srv chat.Chat_StreamServer) error {
 			return err
 		}
 
-		fmt.Printf("\nnikitag: %+v\n\n", msg)
+		s.logger.Info("received a message")
 
-		s.out <- parseMessage(msg)
+		s.out <- msg
 	}
 	return nil
-}
-
-func parseMessage(chatMsg *chat.Message) *messages.Message {
-	msg := &messages.Message{
-		Timestamp: time.Unix(chatMsg.Timestamp.Seconds, int64(chatMsg.Timestamp.Nanos)),
-	}
-
-	switch chatMsg.Payload.(type) {
-	case *chat.Message_Text:
-		msg.Type = messages.TypeText
-		msg.Text = chatMsg.Payload.(*chat.Message_Text).Text
-	default:
-		msg.Type = messages.TypeInvalid
-	}
-	return msg
 }

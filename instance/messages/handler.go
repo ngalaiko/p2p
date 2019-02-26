@@ -1,4 +1,4 @@
-package handler
+package messages
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	grpc_resolver "google.golang.org/grpc/resolver"
 
 	"github.com/ngalayko/p2p/instance/logger"
-	"github.com/ngalayko/p2p/instance/messages"
 	"github.com/ngalayko/p2p/instance/messages/client"
 	"github.com/ngalayko/p2p/instance/messages/client/resolver"
 	"github.com/ngalayko/p2p/instance/messages/proto/chat"
@@ -20,7 +19,7 @@ import (
 	"github.com/ngalayko/p2p/instance/peers"
 )
 
-// Handler used to send and receive messages.
+// Handler runs message server and holds connection to known peers.
 type Handler struct {
 	logger *logger.Logger
 	self   *peers.Peer
@@ -36,8 +35,8 @@ type Handler struct {
 	clientsResolver *resolver.Builder
 }
 
-// New returns new messages handler.
-func New(
+// NewHandler returns new messages handler.
+func NewHandler(
 	log *logger.Logger,
 	self *peers.Peer,
 	port string,
@@ -50,7 +49,7 @@ func New(
 	)
 
 	messagesServer := server.New(log)
-	customResolver := resolver.New(port)
+	customResolver := resolver.New()
 
 	chat.RegisterChatServer(grpcServer, messagesServer)
 	grpc_resolver.Register(customResolver)
@@ -68,9 +67,9 @@ func New(
 	}
 }
 
-// ListenAndServe starts server.
+// Listen starts server.
 func (h *Handler) Listen(ctx context.Context) error {
-	addr := fmt.Sprintf("0.0.0.0:%s", h.port)
+	addr := net.JoinHostPort("0.0.0.0", h.port)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
@@ -79,16 +78,19 @@ func (h *Handler) Listen(ctx context.Context) error {
 	return h.srv.Serve(lis)
 }
 
-// Send sends the message to recipients.
-func (h *Handler) Send(ctx context.Context, m *messages.Message, to *peers.Peer) error {
-	to = h.enrich(to)
+// SendText sends the text message.
+func (h *Handler) SendText(ctx context.Context, text string, toID string) error {
+	to, err := h.getPeer(toID)
+	if err != nil {
+		return err
+	}
 
 	grpcClient, err := h.getClient(ctx, to)
 	if err != nil {
 		return err
 	}
 
-	return grpcClient.Send(ctx, m)
+	return grpcClient.SendText(ctx, text)
 }
 
 func (h *Handler) getClient(ctx context.Context, peer *peers.Peer) (*client.Client, error) {
@@ -119,11 +121,14 @@ func (h *Handler) getClient(ctx context.Context, peer *peers.Peer) (*client.Clie
 	return grpcClient, nil
 }
 
-func (h *Handler) enrich(peer *peers.Peer) *peers.Peer {
-	switch peer.ID {
+func (h *Handler) getPeer(peerID string) (*peers.Peer, error) {
+	switch peerID {
 	case h.self.ID:
-		return h.self
+		return h.self, nil
 	default:
-		return h.self.KnownPeers.Get(peer.ID)
+		if peer := h.self.KnownPeers.Get(peerID); peer != nil {
+			return peer, nil
+		}
+		return nil, fmt.Errorf("unknown peer: %s", peerID)
 	}
 }
