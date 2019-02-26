@@ -17,7 +17,7 @@ type Peer struct {
 	Name string `json:"name"`
 	Port string `json:"port"`
 
-	KnownPeers *peersList `json:"-"`
+	KnownPeers *peersList `json:"known_peers"`
 
 	Addrs *addrsList `json:"-"`
 
@@ -26,9 +26,7 @@ type Peer struct {
 }
 
 // New is a peer constructor.
-func New(port string) (*Peer, error) {
-	r := rand.New(rand.NewSource(time.Now().Unix()))
-
+func New(r *rand.Rand, port string) (*Peer, error) {
 	idBytes := make([]byte, idLen)
 	_, err := r.Read(idBytes)
 	if err != nil {

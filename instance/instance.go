@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/ngalayko/p2p/instance/discovery"
@@ -36,11 +37,16 @@ func New(
 ) *Instance {
 	log := logger.New(logLevel)
 
-	self, err := peers.New(port)
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+
+	self, err := peers.New(r, port)
 	if err != nil {
 		log.Panic("can't initialize peer: %s", err)
 	}
-	msgHandler := messages.NewHandler(log, self, port)
+
+	log.Info("peer id: %s", self.ID)
+
+	msgHandler := messages.NewHandler(r, log, self, port)
 
 	return &Instance{
 		self:   self,
@@ -58,7 +64,7 @@ func New(
 func (i *Instance) Start(ctx context.Context) error {
 	go i.watchPeers(ctx)
 	go func() {
-		if err := i.msgHandler.Listen(ctx); err != nil {
+		if err := i.msgHandler.Start(ctx); err != nil {
 			i.logger.Panic("message server: %s", err)
 		}
 	}()

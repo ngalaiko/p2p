@@ -62,7 +62,6 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		m := &message{}
 		if err := json.Unmarshal(data, m); err != nil {
-			ws.log.Error("can't unmarshal data '%s' from %s: %s", string(data), origin, err)
 			continue
 		}
 

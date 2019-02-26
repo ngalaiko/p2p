@@ -5,7 +5,7 @@ package chat;
 import "google/protobuf/timestamp.proto";
 
 service Chat {
-    rpc Stream(stream Message) returns (stream MessageStatus) {}
+    rpc Stream(stream Message) returns (stream Message) {}
 }
 
 message Message {
@@ -14,16 +14,6 @@ message Message {
     string id = 2;
 
     oneof payload {
-        string text  = 5;
-    }
-}
-
-message MessageStatus {
-    string id = 1;
-
-    enum status {
-        INVALID = 0;
-        DELIVERED = 1;
-        READ = 2;
+        string text  = 3;
     }
 }

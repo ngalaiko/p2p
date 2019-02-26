@@ -1,17 +1,18 @@
 package server
 
 import (
-	"io"
+	"fmt"
 
 	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/messages/proto/chat"
+	"google.golang.org/grpc/metadata"
 )
 
-// Server used to receive messages from other peers.
+// Server used to receive a connection from another peer.
 type Server struct {
 	logger *logger.Logger
 
-	out chan *chat.Message
+	newStreams chan *Stream
 }
 
 // New is server constructor.
@@ -19,38 +20,34 @@ func New(
 	log *logger.Logger,
 ) *Server {
 	return &Server{
-		logger: log.Prefix("grpc-server"),
-		out:    make(chan *chat.Message),
+		logger:     log.Prefix("grpc-server"),
+		newStreams: make(chan *Stream),
 	}
 }
 
 // Stream implements chat.MessageServer.
 func (s *Server) Stream(srv chat.Chat_StreamServer) error {
-	if err := s.listen(srv); err != nil {
-		return err
+	md, ok := metadata.FromIncomingContext(srv.Context())
+	if !ok {
+		return fmt.Errorf("metadata missing")
 	}
+	if len(md[chat.HeaderPeerID]) == 0 {
+		return fmt.Errorf("peer id header missing")
+	}
+
+	peerID := md[chat.HeaderPeerID][0]
+
+	s.logger.Info("%s connected", peerID)
+	defer s.logger.Info("%s disconnected", peerID)
+
+	s.newStreams <- newStream(srv, peerID)
+
+	<-srv.Context().Done()
+
 	return nil
 }
 
-// Received returns channel with incoming messages.
-func (s *Server) Received() <-chan *chat.Message {
-	return s.out
-}
-
-func (s *Server) listen(srv chat.Chat_StreamServer) error {
-	for {
-		msg, err := srv.Recv()
-		switch err {
-		case nil:
-		case io.EOF:
-			return nil
-		default:
-			return err
-		}
-
-		s.logger.Info("received a message")
-
-		s.out <- msg
-	}
-	return nil
+// Streams returns channel with new streams.
+func (s *Server) Streams() <-chan *Stream {
+	return s.newStreams
 }
