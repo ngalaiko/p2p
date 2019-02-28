@@ -20,6 +20,7 @@ var (
 	discoveryPort     = flag.String("discovery_port", "30002", "port to discover other peers")
 	uiPort            = flag.String("ui_port", "30003", "port to serve ui interface")
 	discoveryInterval = flag.Duration("discovery_interval", 1*time.Second, "interval to send discovery broadcast")
+	statisPath        = flag.String("static_path", "./client/public", "path to static files for ui")
 )
 
 func main() {
@@ -41,6 +42,7 @@ func main() {
 		log,
 		net.JoinHostPort("0.0.0.0", *uiPort),
 		inst,
+		*statisPath,
 	)
 
 	ctx := context.Background()

@@ -20,6 +20,7 @@ func New(
 	log *logger.Logger,
 	addr string,
 	instance *instance.Instance,
+	staticPath string,
 ) *UI {
 	log = log.Prefix("ui")
 
@@ -30,13 +31,13 @@ func New(
 		},
 		ws: ws.New(log, instance),
 	}
-	u.server.Handler = u.handler()
+	u.server.Handler = u.handler(staticPath)
 	return u
 }
 
-func (u *UI) handler() http.Handler {
+func (u *UI) handler(staticPath string) http.Handler {
 	m := http.NewServeMux()
-	m.Handle("/", http.FileServer(http.Dir("./client/public")))
+	m.Handle("/", http.FileServer(http.Dir(staticPath)))
 	m.Handle("/ws", u.ws)
 	return m
 }
