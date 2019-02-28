@@ -42,7 +42,7 @@ func Connect(
 
 	conn, err := grpc.DialContext(
 		ctx,
-		fmt.Sprintf("client:///%s", client.ID),
+		fmt.Sprintf("peer:///%s", client.ID),
 		grpc.WithTransportCredentials(creds),
 		grpc.WithBalancerName("pick_first"),
 	)

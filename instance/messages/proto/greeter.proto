@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package greeter;
+
+service Greeter {
+    rpc Greet(Peer) returns (Peer) {}
+}
+
+message Peer {
+
+    string ID = 1;
+
+    string Name = 2;
+
+    bytes PublicKey = 3;
+
+    repeated string IPs = 4;
+
+    repeated Peer KnownPeers = 5;
+
+}

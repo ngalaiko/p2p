@@ -7,7 +7,6 @@ import (
 
 type addrsList struct {
 	guard *sync.RWMutex
-	list  []net.IP
 	byIP  map[string]net.IP
 }
 
@@ -28,13 +27,12 @@ func (a *addrsList) Add(addr net.IP) bool {
 	}
 
 	a.byIP[addr.String()] = addr
-	a.list = append(a.list, addr)
 	return true
 }
 
-// List returns known addres list.
-func (a *addrsList) List() []net.IP {
+// Map returns map of ips.
+func (a *addrsList) Map() map[string]net.IP {
 	a.guard.RLock()
 	defer a.guard.RUnlock()
-	return a.list
+	return a.byIP
 }

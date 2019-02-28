@@ -13,6 +13,10 @@ function handleMessage(conn, msg) {
     case "peer_added":
       addPeer(msg.peer, false)
       return
+    case "text":
+      addPeer(msg.peer, false)
+      addMessage(msg.text, msg.peer)
+      return
     default:
       console.error("unknown message type", msg.type)
   }
@@ -44,7 +48,7 @@ function addPeer(peer, isSelf) {
   }
 
   if (isSelf) {
-    peer.name += " (me)"
+    peer.name += " (you)"
     peer.self = true
   }
 
@@ -69,35 +73,50 @@ function selectPeer(peer) {
   selectPeerChat(peer)
 }
 
-function selectPeerChat(peer) {
+function getPeerChat(peer) {
   var chat = document.getElementById("peer-chat-"+peer.id)
 
-  if (chat === null) {
-    chat = document.createElement("ul")
-    chat.className = "chat list-group list-group-flush flex-grow-1"
-    chat.id = "peer-chat-"+peer.id
+  if (chat !== null) {
+    return chat 
   }
+
+  chat = document.createElement("ul")
+  chat.className = "chat list-group list-group-flush flex-grow-1"
+  chat.id = "peer-chat-"+peer.id
+
+  document.getElementById("messages").appendChild(chat)
+
+  return chat
+}
+
+function selectPeerChat(peer) {
+  var chat = getPeerChat(peer)
 
   document.querySelectorAll(".chat").forEach(e => {
     e.className += " collapse"
   })
 
   chat.classList.remove("collapse")
-
-  document.getElementById("messages").appendChild(chat)
 }
 
-function addMessage(msg, peer, from) {
+function addMessage(msg, from) {
+  var self
+  document.querySelectorAll(".peer").forEach(e => {
+    if (e.peer.self) {
+      self = e.peer
+    }
+  })
+
   var message = document.createElement("li")
   message.className = "list-group-item"
-  if (from) {
+  if (from.id !== self.id) {
     message.className += " text-left"
   } else {
     message.className += " text-right"
   }
   message.innerHTML = msg
 
-  document.getElementById("peer-chat-"+peer.id).appendChild(message)
+  getPeerChat(from).appendChild(message)
 }
 
 function selectPeerContact(peer) {

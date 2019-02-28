@@ -5,32 +5,38 @@ import (
 	"net"
 	"sync"
 
-	"github.com/ngalayko/p2p/instance/peers"
 	"google.golang.org/grpc/resolver"
+
+	"github.com/ngalayko/p2p/instance/peers"
 )
 
 // Builder returns a resolver for a client addrs.
 type Builder struct {
-	port string
+	secure bool
 
 	guard      *sync.RWMutex
 	addrsStore map[string][]string
 }
 
 // New returns a new resolver for the peer.
-func New() *Builder {
+func New(secure bool) *Builder {
 	return &Builder{
 		guard:      &sync.RWMutex{},
 		addrsStore: map[string][]string{},
+		secure:     secure,
 	}
 }
 
 // Add adds peer resolution rules.
 func (b *Builder) Add(peer *peers.Peer) {
-	list := peer.Addrs.List()
-	addrs := make([]string, 0, len(list))
-	for _, addr := range list {
-		addrs = append(addrs, makeAddr(addr, peer.Port))
+	m := peer.Addrs.Map()
+	addrs := make([]string, 0, len(m))
+	for _, addr := range m {
+		if b.secure {
+			addrs = append(addrs, makeAddr(addr, peer.Port))
+		} else {
+			addrs = append(addrs, makeAddr(addr, peer.InsecurePort))
+		}
 	}
 
 	b.guard.Lock()
@@ -60,7 +66,12 @@ func (b *Builder) Build(target resolver.Target, cc resolver.ClientConn, opts res
 }
 
 // Scheme implements grpc.Builder.
-func (*Builder) Scheme() string { return "client" }
+func (b *Builder) Scheme() string {
+	if b.secure {
+		return "peer"
+	}
+	return "greet"
+}
 
 // Resolver implements grpc.Resolver.
 type Resolver struct {

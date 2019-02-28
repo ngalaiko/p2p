@@ -15,18 +15,24 @@ const idLen = 32
 type Peer struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
-	Port string `json:"port"`
 
-	KnownPeers *peersList `json:"known_peers"`
+	Port         string `json:"port"`
+	InsecurePort string `json:"insecure_port"`
+
+	KnownPeers *peersList `json:"-"`
 
 	Addrs *addrsList `json:"-"`
 
-	PublicCrt   []byte           `json:"public_key"`
+	PublicCrt   []byte           `json:"-"`
 	Certificate *tls.Certificate `json:"-"`
 }
 
 // New is a peer constructor.
-func New(r *rand.Rand, port string) (*Peer, error) {
+func New(
+	r *rand.Rand,
+	port string,
+	insecurePort string,
+) (*Peer, error) {
 	idBytes := make([]byte, idLen)
 	_, err := r.Read(idBytes)
 	if err != nil {
@@ -34,11 +40,12 @@ func New(r *rand.Rand, port string) (*Peer, error) {
 	}
 
 	p := &Peer{
-		ID:         hex.EncodeToString(idBytes),
-		Name:       newName(r),
-		KnownPeers: newPeersList(),
-		Addrs:      newAddrsList(),
-		Port:       port,
+		ID:           hex.EncodeToString(idBytes),
+		Name:         newName(r),
+		KnownPeers:   newPeersList(),
+		Addrs:        newAddrsList(),
+		Port:         port,
+		InsecurePort: insecurePort,
 	}
 
 	p.PublicCrt, p.Certificate, err = generateCertificate(p, r, 4096, time.Now().AddDate(1, 0, 0))
@@ -47,6 +54,14 @@ func New(r *rand.Rand, port string) (*Peer, error) {
 	}
 
 	return p, nil
+}
+
+// NewBlank returns new empty peer.
+func NewBlank() *Peer {
+	return &Peer{
+		KnownPeers: newPeersList(),
+		Addrs:      newAddrsList(),
+	}
 }
 
 // Marshal is a marshal function to use when sending peer info over a network.

@@ -78,10 +78,20 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (ws *WebSocket) watchUpdates(conn *websocket.Conn) {
 	for {
 		select {
-		case new := <-ws.self.KnownPeers.Updated():
-			if err := conn.WriteJSON(newPeersAddedMessage(new)); err != nil {
-				ws.log.Error("error writing update message: %s", err)
-				return
+		case <-ws.self.KnownPeers.Updated():
+			for _, peer := range ws.self.KnownPeers.Map() {
+				if err := conn.WriteJSON(newPeersAddedMessage(peer)); err != nil {
+					ws.log.Error("error writing update message: %s", err)
+					return
+				}
+			}
+		case msg := <-ws.msgHandler.Received():
+			switch msg.Type {
+			case messages.TypeText:
+				if err := conn.WriteJSON(newTextMessage(msg.From, msg.Text)); err != nil {
+					ws.log.Error("error writing update message: %s", err)
+					return
+				}
 			}
 		}
 	}

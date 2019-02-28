@@ -7,18 +7,16 @@ import (
 
 // peer is a list of peers.
 type peersList struct {
-	guard *sync.RWMutex
-
-	list    []*Peer
+	guard   *sync.RWMutex
 	byID    map[string]*Peer
-	updated chan *Peer
+	updated chan bool
 }
 
 func newPeersList() *peersList {
 	return &peersList{
 		guard:   &sync.RWMutex{},
 		byID:    map[string]*Peer{},
-		updated: make(chan *Peer),
+		updated: make(chan bool),
 	}
 }
 
@@ -30,7 +28,7 @@ func (p peersList) MarshalJSON() ([]byte, error) {
 }
 
 // Updated returns a chan that closes every time list gets updated.
-func (p *peersList) Updated() <-chan *Peer {
+func (p *peersList) Updated() <-chan bool {
 	p.guard.RLock()
 	defer p.guard.RUnlock()
 	return p.updated
@@ -41,34 +39,21 @@ func (p *peersList) Add(peer *Peer) {
 	p.guard.Lock()
 	defer p.guard.Unlock()
 
-	known, ok := p.byID[peer.ID]
-	if !ok {
-		p.list = append(p.list, peer)
-		p.byID[peer.ID] = peer
-		p.updated <- peer
+	if _, ok := p.byID[peer.ID]; ok {
 		return
 	}
 
-	wasUpdated := false
-	for _, addr := range peer.Addrs.List() {
-		wasUpdated = wasUpdated || known.Addrs.Add(addr)
-	}
+	p.byID[peer.ID] = peer
 
-	if wasUpdated {
-		p.updated <- peer
-	}
+	close(p.updated)
+	p.updated = make(chan bool)
+
+	return
 }
 
-// Get returns peer by id.
-func (p *peersList) Get(id string) *Peer {
+// Map returns peers map.
+func (p *peersList) Map() map[string]*Peer {
 	p.guard.RLock()
 	defer p.guard.RUnlock()
-	return p.byID[id]
-}
-
-// List retuns a list of peers.
-func (p *peersList) List() []*Peer {
-	p.guard.RLock()
-	defer p.guard.RUnlock()
-	return p.list
+	return p.byID
 }

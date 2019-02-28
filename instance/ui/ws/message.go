@@ -33,3 +33,11 @@ func newPeersAddedMessage(p *peers.Peer) *message {
 		Peer: p,
 	}
 }
+
+func newTextMessage(from *peers.Peer, text string) *message {
+	return &message{
+		Type: messageTypeText,
+		Peer: from,
+		Text: text,
+	}
+}

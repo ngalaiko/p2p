@@ -63,7 +63,7 @@ func makeText(r *rand.Rand, text string) (*chat.Message, error) {
 		return nil, fmt.Errorf("error reading random bytes: %s", err)
 	}
 	return &chat.Message{
-		Id: hex.EncodeToString(idBytes),
+		ID: hex.EncodeToString(idBytes),
 		Timestamp: &timestamp.Timestamp{
 			Seconds: time.Now().Unix(),
 		},

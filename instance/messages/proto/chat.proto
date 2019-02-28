@@ -9,11 +9,11 @@ service Chat {
 }
 
 message Message {
-    google.protobuf.Timestamp timestamp = 1;
+    string ID = 1;
     
-    string id = 2;
+    google.protobuf.Timestamp Timestamp = 2;
 
-    oneof payload {
-        string text  = 3;
+    oneof Payload {
+        string Text = 3;
     }
 }

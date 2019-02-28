@@ -1,7 +1,6 @@
 package messages
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -23,6 +22,17 @@ func (h *Handler) listenStream(s Stream, peerID string) {
 
 		h.logger.Info("new message from %s", peerID)
 
-		fmt.Printf("\nnikitag: %+v\n\n", msg)
+		peer, err := h.getPeer(peerID)
+		if err != nil {
+			h.logger.Error("message from unknown peer: %s", err)
+			continue
+		}
+
+		h.received <- fromProto(peer, msg)
 	}
+}
+
+// Received returns a channel with new messages.
+func (h *Handler) Received() <-chan *Message {
+	return h.received
 }

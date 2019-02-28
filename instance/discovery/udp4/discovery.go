@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	maxDatagramSize = 199521
+	maxDatagramSize = 65507
 )
 
 // Discovery is a udp4 multicast discovery.

@@ -32,6 +32,7 @@ func New(
 	udp6Multicast string,
 	discoveryPort string,
 	port string,
+	insecurePort string,
 	uiPort string,
 	discroverInterval time.Duration,
 ) *Instance {
@@ -39,14 +40,14 @@ func New(
 
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 
-	self, err := peers.New(r, port)
+	self, err := peers.New(r, port, insecurePort)
 	if err != nil {
 		log.Panic("can't initialize peer: %s", err)
 	}
 
 	log.Info("peer id: %s", self.ID)
 
-	msgHandler := messages.NewHandler(r, log, self, port)
+	msgHandler := messages.NewHandler(r, log, self)
 
 	return &Instance{
 		self:   self,
@@ -84,7 +85,7 @@ func (i *Instance) watchPeers(ctx context.Context) {
 				continue
 			}
 
-			for _, addr := range peer.Addrs.List() {
+			for _, addr := range peer.Addrs.Map() {
 				i.self.Addrs.Add(addr)
 			}
 		}
