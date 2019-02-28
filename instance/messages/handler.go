@@ -39,7 +39,7 @@ type Handler struct {
 	messagesServer *server.Server
 
 	streamsGuard *sync.RWMutex
-	streams      map[string]Stream
+	streams      map[string]stream
 
 	received chan *Message
 	sent     chan *Message
@@ -81,7 +81,7 @@ func NewHandler(
 		messagesServer: messagesServer,
 
 		streamsGuard: &sync.RWMutex{},
-		streams:      map[string]Stream{},
+		streams:      map[string]stream{},
 
 		received: make(chan *Message),
 		sent:     make(chan *Message),
@@ -138,7 +138,7 @@ func (h *Handler) watchStreamsFromServer() {
 }
 
 // returns an existed stream or opens a new one.
-func (h *Handler) getStream(ctx context.Context, peer *peers.Peer) (Stream, error) {
+func (h *Handler) getStream(ctx context.Context, peer *peers.Peer) (stream, error) {
 	h.streamsGuard.RLock()
 	stream, found := h.streams[peer.ID]
 	h.streamsGuard.RUnlock()
@@ -178,7 +178,7 @@ func (h *Handler) greet(ctx context.Context, peer *peers.Peer) (*peers.Peer, err
 	return grpcPeer.MarshalPeer()
 }
 
-func (h *Handler) openStream(ctx context.Context, peer *peers.Peer) (Stream, error) {
+func (h *Handler) openStream(ctx context.Context, peer *peers.Peer) (stream, error) {
 	cp := x509.NewCertPool()
 	if !cp.AppendCertsFromPEM(peer.PublicCrt) {
 		return nil, fmt.Errorf("failed to append certificates")

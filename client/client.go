@@ -1,12 +1,11 @@
-package ui
+package client
 
 import (
 	"net/http"
 
+	"github.com/ngalayko/p2p/client/ws"
+	"github.com/ngalayko/p2p/instance"
 	"github.com/ngalayko/p2p/instance/logger"
-	"github.com/ngalayko/p2p/instance/messages"
-	"github.com/ngalayko/p2p/instance/peers"
-	"github.com/ngalayko/p2p/instance/ui/ws"
 )
 
 // UI serves user interface.
@@ -19,9 +18,8 @@ type UI struct {
 // New is a ui constructor.
 func New(
 	log *logger.Logger,
-	self *peers.Peer,
 	addr string,
-	msgHandler *messages.Handler,
+	instance *instance.Instance,
 ) *UI {
 	log = log.Prefix("ui")
 
@@ -30,7 +28,7 @@ func New(
 		server: &http.Server{
 			Addr: addr,
 		},
-		ws: ws.New(log, self, msgHandler),
+		ws: ws.New(log, instance),
 	}
 	u.server.Handler = u.handler()
 	return u
@@ -38,7 +36,7 @@ func New(
 
 func (u *UI) handler() http.Handler {
 	m := http.NewServeMux()
-	m.Handle("/", http.FileServer(http.Dir("./ui/public")))
+	m.Handle("/", http.FileServer(http.Dir("./client/public")))
 	m.Handle("/ws", u.ws)
 	return m
 }

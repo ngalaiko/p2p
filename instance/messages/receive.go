@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-func (h *Handler) listenStream(s Stream, peerID string) {
+func (h *Handler) listenStream(s stream, peerID string) {
 	h.logger.Info("listening for messages from %s", peerID)
 	defer h.logger.Info("stop listening for messages from %s", peerID)
 

@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"flag"
+	"net"
 	"time"
 
+	"github.com/ngalayko/p2p/client"
 	"github.com/ngalayko/p2p/instance"
 	"github.com/ngalayko/p2p/instance/logger"
 )
@@ -23,17 +25,37 @@ var (
 func main() {
 	flag.Parse()
 
-	m := instance.New(
-		logger.ParseLevel(*logLevel),
+	log := logger.New(logger.ParseLevel(*logLevel))
+
+	inst := instance.New(
+		log,
 		*udp4Multicast,
 		*udp6Multicast,
 		*discoveryPort,
 		*port,
 		*insecurePort,
-		*uiPort,
 		*discoveryInterval,
 	)
-	if err := m.Start(context.Background()); err != nil {
-		panic(err)
-	}
+
+	client := client.New(
+		log,
+		net.JoinHostPort("0.0.0.0", *uiPort),
+		inst,
+	)
+
+	ctx := context.Background()
+
+	go func() {
+		if err := inst.Start(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	go func() {
+		if err := client.ListenAndServe(); err != nil {
+			panic(err)
+		}
+	}()
+
+	<-ctx.Done()
 }

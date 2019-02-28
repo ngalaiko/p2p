@@ -6,30 +6,27 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"github.com/ngalayko/p2p/instance"
 	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/messages"
-	"github.com/ngalayko/p2p/instance/peers"
 )
 
 // WebSocket serves data to the ui.
 type WebSocket struct {
-	log        *logger.Logger
-	self       *peers.Peer
-	upgrader   *websocket.Upgrader
-	msgHandler *messages.Handler
+	log      *logger.Logger
+	upgrader *websocket.Upgrader
+	instance *instance.Instance
 }
 
 // New is returns new websocket handler.
 func New(
 	log *logger.Logger,
-	self *peers.Peer,
-	msgHandler *messages.Handler,
+	instance *instance.Instance,
 ) *WebSocket {
 	return &WebSocket{
-		log:        log.Prefix("ui-ws"),
-		self:       self,
-		upgrader:   &websocket.Upgrader{},
-		msgHandler: msgHandler,
+		log:      log.Prefix("ui-ws"),
+		upgrader: &websocket.Upgrader{},
+		instance: instance,
 	}
 }
 
@@ -48,7 +45,7 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	go ws.watchUpdates(conn)
 
-	if err := conn.WriteJSON(newInitMessage(ws.self)); err != nil {
+	if err := conn.WriteJSON(newInitMessage(ws.instance.Peer)); err != nil {
 		ws.log.Error("error writing init message to %s: %s", origin, err)
 		return
 	}
@@ -67,7 +64,7 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		switch m.Type {
 		case messageTypeTextSent:
-			if err := ws.msgHandler.SendText(r.Context(), m.Message.Text, m.Message.To.ID); err != nil {
+			if err := ws.instance.SendText(r.Context(), m.Message.Text, m.Message.To.ID); err != nil {
 				ws.log.Error("can't send message: %s", err)
 				continue
 			}
@@ -78,14 +75,14 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (ws *WebSocket) watchUpdates(conn *websocket.Conn) {
 	for {
 		select {
-		case <-ws.self.KnownPeers.Updated():
-			for _, peer := range ws.self.KnownPeers.Map() {
+		case <-ws.instance.KnownPeers.Updated():
+			for _, peer := range ws.instance.KnownPeers.Map() {
 				if err := conn.WriteJSON(newPeerAddedMessage(peer)); err != nil {
 					ws.log.Error("error writing new peer message: %s", err)
 					return
 				}
 			}
-		case msg := <-ws.msgHandler.Sent():
+		case msg := <-ws.instance.Sent():
 			switch msg.Type {
 			case messages.TypeText:
 				if err := conn.WriteJSON(newTextMessageSent(msg)); err != nil {
@@ -93,7 +90,7 @@ func (ws *WebSocket) watchUpdates(conn *websocket.Conn) {
 					return
 				}
 			}
-		case msg := <-ws.msgHandler.Received():
+		case msg := <-ws.instance.Received():
 			switch msg.Type {
 			case messages.TypeText:
 				if err := conn.WriteJSON(newTextMessageReceived(msg)); err != nil {
