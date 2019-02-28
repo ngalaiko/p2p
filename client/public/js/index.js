@@ -98,7 +98,7 @@ function getPeerChat(peer) {
     return chat 
   }
 
-  chat = document.createElement('ul')
+  chat = document.createElement('div')
   chat.className = 'chat list-group list-group-flush flex-grow-1 collapse'
   chat.id = 'peer-chat-'+peer.id
 
@@ -131,9 +131,9 @@ function addMessage(msg) {
   })
 
 
-  message = document.createElement('li')
+  message = document.createElement('div')
   message.id = 'message-'+msg.id
-  message.className = 'list-group-item'
+  message.className = 'm-2'
   message.innerHTML = msg.text
 
   if (msg.from.id !== self.id) {

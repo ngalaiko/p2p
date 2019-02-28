@@ -8,28 +8,21 @@
     <link rel="stylesheet" href="./css/index.css">
 </head>
 <body>
-    <div class="container-fluid min-100 d-flex flex-column">
-        <nav class="navbar navbar-light bg-light">
+    <div id="app" class="container-fluid min-height-100 p-2 d-flex flex-column">
+        <nav class="navbar navbar-light">
             <a class="navbar-brand">
                 P2P chat
             </a>
         </nav>
         <div class="row no-gutters flex-grow-1">
-            <div class="col-3">
-                <ul id="peers" class="list-group"></ul>
-            </div>
-            <div class="col">
-                <div id="messages" class="container min-100 d-flex flex-column">
-                    <div class="row py-3 no-gutters order-last">
-                        <div class="col">
-                            <div class="input-group">
-                            <input id="message" type="text" class="form-control input-lg" id="search-church" placeholder="Enter your message">
-                            <span class="input-group-btn">
-                                <button id="send" class="btn btn-primary type="submit">Send</button>
-                            </span>
-                            </div>
-                        </div>
-                    </div>
+            <ul id="peers" class="col-3 min-height-100 pre-scrollable list-group"></ul>
+            <div class="col flex pl-3">
+                <div id="messages" class="container pre-scrollable min-height-92"></div>
+                <div class="flex-end input-group">
+                    <input id="message" type="text" class="form-control input-lg" id="search-church" placeholder="Enter your message">
+                    <span class="input-group-btn">
+                        <button id="send" class="btn btn-primary type="submit">Send</button>
+                    </span>
                 </div>
             </div>
         </div>
