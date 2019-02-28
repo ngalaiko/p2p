@@ -118,6 +118,7 @@ function addMessage(msg) {
     }
   })
 
+
   message = document.createElement("li")
   message.id = "message-"+msg.id
   message.className = "list-group-item"
@@ -126,6 +127,7 @@ function addMessage(msg) {
   if (msg.from.id !== self.id) {
     message.className += " text-left"
     getPeerChat(msg.from).appendChild(message)
+    updateUnread(msg.from, 1)
   } else {
     message.className += " text-right"
     getPeerChat(msg.to).appendChild(message)
@@ -138,6 +140,7 @@ function selectPeerContact(peer) {
   })
 
   document.getElementById("peer-"+peer.id).className += " active"
+  updateUnread(peer, -10000)
 }
 
 function updateUnread(peer, diff) {
@@ -154,6 +157,10 @@ function updateUnread(peer, diff) {
 
   badge.innerHTML = Number(badge.innerHTML) + diff
 
+  if (peer.classList.contains("active")) {
+    badge.innerHTML = ""
+  }
+
   if (Number(badge.innerHTML) <= 0) {
     badge.innerHTML = ""
   }
@@ -161,7 +168,10 @@ function updateUnread(peer, diff) {
 
 function connectWs() {
     let wsAddr = "ws://" + document.location.host + "/ws"
-    let conn = new WebSocket(wsAddr);
+    let conn = new ReconnectingWebSocket(wsAddr);
+    conn.onopen = function () {
+      console.log("connected")
+    }
     conn.onclose = function (evt) {
       console.log("connection closed")
     };
