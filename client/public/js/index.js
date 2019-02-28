@@ -6,9 +6,21 @@ function handleMessage(conn, msg) {
       addPeer(msg.peer, true)
       selectPeer(msg.peer)
 
+      var known = {}
       for (id in msg.peer.known_peers) {
         addPeer(msg.peer.known_peers[id], false)
+        known["peer-"+id] = true
       }
+      known["peer-"+msg.peer.id] = true
+
+      document.querySelectorAll(".peer").forEach(e => {
+        if (known[e.id]) {
+          return
+        }
+
+        console.log("removing", e)
+        e.parentNode.removeChild(e)
+      })
       return
     case "peer_added":
       addPeer(msg.peer, false)
