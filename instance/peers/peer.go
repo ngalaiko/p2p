@@ -19,7 +19,7 @@ type Peer struct {
 	Port         string `json:"port"`
 	InsecurePort string `json:"insecure_port"`
 
-	KnownPeers *peersList `json:"-"`
+	KnownPeers *peersList `json:"known_peers"`
 
 	Addrs *addrsList `json:"-"`
 

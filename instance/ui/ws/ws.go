@@ -66,8 +66,8 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		switch m.Type {
-		case messageTypeText:
-			if err := ws.msgHandler.SendText(r.Context(), m.Text, m.Peer.ID); err != nil {
+		case messageTypeTextSent:
+			if err := ws.msgHandler.SendText(r.Context(), m.Message.Text, m.Message.To.ID); err != nil {
 				ws.log.Error("can't send message: %s", err)
 				continue
 			}
@@ -80,16 +80,24 @@ func (ws *WebSocket) watchUpdates(conn *websocket.Conn) {
 		select {
 		case <-ws.self.KnownPeers.Updated():
 			for _, peer := range ws.self.KnownPeers.Map() {
-				if err := conn.WriteJSON(newPeersAddedMessage(peer)); err != nil {
-					ws.log.Error("error writing update message: %s", err)
+				if err := conn.WriteJSON(newPeerAddedMessage(peer)); err != nil {
+					ws.log.Error("error writing new peer message: %s", err)
+					return
+				}
+			}
+		case msg := <-ws.msgHandler.Sent():
+			switch msg.Type {
+			case messages.TypeText:
+				if err := conn.WriteJSON(newTextMessageSent(msg)); err != nil {
+					ws.log.Error("error writing sent message: %s", err)
 					return
 				}
 			}
 		case msg := <-ws.msgHandler.Received():
 			switch msg.Type {
 			case messages.TypeText:
-				if err := conn.WriteJSON(newTextMessage(msg.From, msg.Text)); err != nil {
-					ws.log.Error("error writing update message: %s", err)
+				if err := conn.WriteJSON(newTextMessageReceived(msg)); err != nil {
+					ws.log.Error("error writing received message: %s", err)
 					return
 				}
 			}

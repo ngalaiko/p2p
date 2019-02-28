@@ -18,18 +18,20 @@ var (
 
 // Message is a single message.
 type Message struct {
-	ID        string
-	From      *peers.Peer
-	Timestamp time.Time
-	Type      Type
-	Text      string
+	ID        string      `json:"id"`
+	From      *peers.Peer `json:"from"`
+	To        *peers.Peer `json:"to"`
+	Timestamp time.Time   `json:"timestamp"`
+	Type      Type        `json:"type"`
+	Text      string      `json:"text"`
 }
 
-func fromProto(from *peers.Peer, m *chat.Message) *Message {
+func fromProto(from, to *peers.Peer, m *chat.Message) *Message {
 	msg := &Message{
 		ID:        m.ID,
 		Timestamp: time.Unix(m.Timestamp.Seconds, 0),
 		From:      from,
+		To:        to,
 	}
 	switch m.Payload.(type) {
 	case *chat.Message_Text:

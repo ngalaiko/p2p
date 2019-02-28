@@ -28,7 +28,7 @@ func (h *Handler) listenStream(s Stream, peerID string) {
 			continue
 		}
 
-		h.received <- fromProto(peer, msg)
+		h.received <- fromProto(peer, h.self, msg)
 	}
 }
 

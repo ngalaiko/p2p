@@ -42,6 +42,7 @@ type Handler struct {
 	streams      map[string]Stream
 
 	received chan *Message
+	sent     chan *Message
 }
 
 // NewHandler returns new messages handler.
@@ -83,6 +84,7 @@ func NewHandler(
 		streams:      map[string]Stream{},
 
 		received: make(chan *Message),
+		sent:     make(chan *Message),
 	}
 }
 

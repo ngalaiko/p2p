@@ -13,9 +13,13 @@ function handleMessage(conn, msg) {
     case "peer_added":
       addPeer(msg.peer, false)
       return
-    case "text":
-      addPeer(msg.peer, false)
-      addMessage(msg.text, msg.peer)
+    case "text_sent":
+      addPeer(msg.message.to, false)
+      addMessage(msg.message)
+      return
+    case "text_received":
+      addPeer(msg.message.from, false)
+      addMessage(msg.message)
       return
     default:
       console.error("unknown message type", msg.type)
@@ -32,9 +36,11 @@ function sendMessage(conn) {
   let recipient = document.querySelector(".peer.active")
 
   var message = {
-    type: "text",
-    text: msg.value,
-    peer: recipient.peer,
+    type: "text_sent",
+    message: {
+      text: msg.value,
+      to: recipient.peer,
+    },
   }
 
   conn.send(JSON.stringify(message))
@@ -99,7 +105,12 @@ function selectPeerChat(peer) {
   chat.classList.remove("collapse")
 }
 
-function addMessage(msg, from) {
+function addMessage(msg) {
+  var message = document.getElementById("message-"+msg.id)
+  if (message !== null) {
+    return 
+  }
+
   var self
   document.querySelectorAll(".peer").forEach(e => {
     if (e.peer.self) {
@@ -107,16 +118,18 @@ function addMessage(msg, from) {
     }
   })
 
-  var message = document.createElement("li")
+  message = document.createElement("li")
+  message.id = "message-"+msg.id
   message.className = "list-group-item"
-  if (from.id !== self.id) {
+  message.innerHTML = msg.text
+
+  if (msg.from.id !== self.id) {
     message.className += " text-left"
+    getPeerChat(msg.from).appendChild(message)
   } else {
     message.className += " text-right"
+    getPeerChat(msg.to).appendChild(message)
   }
-  message.innerHTML = msg
-
-  getPeerChat(from).appendChild(message)
 }
 
 function selectPeerContact(peer) {
@@ -162,9 +175,17 @@ function connectWs() {
             handleMessage(conn, JSON.parse(messages[i]))
         }
     };
-  document.getElementById("send").onclick = function() {
-    sendMessage(conn)
-  }
+
+    document.getElementById("send").onclick = function() {
+      sendMessage(conn)
+    }
+
+    document.onkeypress = function(e) {
+      if (e.key !== "Enter") {
+        return
+      }
+      sendMessage(conn)
+    }
 }
 
 window.onload = connectWs

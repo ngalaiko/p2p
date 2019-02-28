@@ -59,5 +59,8 @@ func (l *Logger) Panic(format string, v ...interface{}) {
 func location() string {
 	_, file, line, _ := runtime.Caller(2)
 	parts := strings.Split(file, "p2p/")
+	if len(parts) < 2 {
+		return ""
+	}
 	return fmt.Sprintf("%s:%d", parts[1], line)
 }
