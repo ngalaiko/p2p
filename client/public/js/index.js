@@ -87,7 +87,7 @@ function getPeerChat(peer) {
   }
 
   chat = document.createElement("ul")
-  chat.className = "chat list-group list-group-flush flex-grow-1"
+  chat.className = "chat list-group list-group-flush flex-grow-1 collapse"
   chat.id = "peer-chat-"+peer.id
 
   document.getElementById("messages").appendChild(chat)
