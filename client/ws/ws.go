@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -64,7 +65,7 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		switch m.Type {
 		case messageTypeTextSent:
-			if err := ws.instance.SendText(r.Context(), m.Message.Text, m.Message.To.ID); err != nil {
+			if err := ws.instance.SendText(context.Background(), m.Message.Text, m.Message.To.ID); err != nil {
 				ws.log.Error("can't send message: %s", err)
 				continue
 			}
