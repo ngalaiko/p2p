@@ -1,4 +1,4 @@
-# Peer to Peer messenger
+# Peer to Peer messenger [![Go Report Card](https://goreportcard.com/badge/github.com/ngalayko/p2p)](https://goreportcard.com/report/github.com/ngalayko/p2p)
 
 ## Features
 
