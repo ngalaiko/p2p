@@ -99,10 +99,10 @@ function getPeerChat(peer) {
   }
 
   chat = document.createElement('div')
-  chat.className = 'chat list-group list-group-flush flex-grow-1 collapse'
+  chat.className = 'chat collapse' // d-flex flex-column flex-grow-1 justify-content-end collapse'
   chat.id = 'peer-chat-'+peer.id
 
-  document.getElementById('messages').appendChild(chat)
+  document.getElementById('chats').appendChild(chat)
 
   return chat
 }

@@ -12,4 +12,9 @@ html, body {
 
 #app {
     max-width: 1010px;
+    margin: 0 auto;
+}
+
+.chat {
+    width: 100%;
 }
