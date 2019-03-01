@@ -5,17 +5,14 @@
 1. UDP multicast discovery within a local network
 2. End-to-end encryption
 
-## Installation
+## Local run 
 
 ```bash
-$ go install github.com/ngalayko/p2p/cmd/peer
-```
-
-## Run 
-
-```bash
-$ peer
-$ open http://127.0.0.1:30003
+go get -u github.com/ngalayko/p2p/...
+go install github.com/ngalayko/p2p/cmd/peer
+cd $GOPATH/github.com/ngalayko/p2p
+peer
+open http://127.0.0.1:30003
 ```
 
 ## Help 
