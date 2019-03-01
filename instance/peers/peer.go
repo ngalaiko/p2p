@@ -32,6 +32,7 @@ func New(
 	r *rand.Rand,
 	port string,
 	insecurePort string,
+	keySize int,
 ) (*Peer, error) {
 	idBytes := make([]byte, idLen)
 	_, err := r.Read(idBytes)
@@ -48,7 +49,7 @@ func New(
 		InsecurePort: insecurePort,
 	}
 
-	p.PublicCrt, p.Certificate, err = generateCertificate(p, r, 4096, time.Now().AddDate(1, 0, 0))
+	p.PublicCrt, p.Certificate, err = generateCertificate(p, r, keySize, time.Now().AddDate(1, 0, 0))
 	if err != nil {
 		return nil, fmt.Errorf("can't generate CA certificate: %s", err)
 	}

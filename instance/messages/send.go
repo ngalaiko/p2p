@@ -7,11 +7,11 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/ngalayko/p2p/instance/messages/proto/chat"
 	"github.com/ngalayko/p2p/instance/peers"
 )

@@ -22,6 +22,16 @@ import (
 	"github.com/ngalayko/p2p/instance/peers"
 )
 
+var (
+	secureResolver   = resolver.New(true)
+	insecureResolver = resolver.New(false)
+)
+
+func init() {
+	grpc_resolver.Register(insecureResolver)
+	grpc_resolver.Register(secureResolver)
+}
+
 const idLen = 32
 
 // Handler runs message server and holds connection to known peers.
@@ -31,10 +41,7 @@ type Handler struct {
 	r      *rand.Rand
 
 	secureServer   *grpc.Server
-	secureResolver *resolver.Builder
-
-	insecureServer   *grpc.Server
-	insecureResolver *resolver.Builder
+	insecureServer *grpc.Server
 
 	messagesServer *server.Server
 
@@ -61,22 +68,13 @@ func NewHandler(
 	insecureGRPCServer := grpc.NewServer()
 	greeter.RegisterGreeterServer(insecureGRPCServer, messagesServer)
 
-	secureResolver := resolver.New(true)
-	grpc_resolver.Register(secureResolver)
-
-	insecureResolver := resolver.New(false)
-	grpc_resolver.Register(insecureResolver)
-
 	return &Handler{
 		r:      r,
 		logger: log.Prefix("messages"),
 		self:   self,
 
 		secureServer:   secureGRPCserver,
-		secureResolver: secureResolver,
-
-		insecureServer:   insecureGRPCServer,
-		insecureResolver: insecureResolver,
+		insecureServer: insecureGRPCServer,
 
 		messagesServer: messagesServer,
 
@@ -146,8 +144,8 @@ func (h *Handler) getStream(ctx context.Context, peer *peers.Peer) (stream, erro
 		return stream, nil
 	}
 
-	h.insecureResolver.Add(peer)
-	h.secureResolver.Add(peer)
+	insecureResolver.Add(peer)
+	secureResolver.Add(peer)
 
 	knownPeer, err := h.greet(ctx, peer)
 	if err != nil {
