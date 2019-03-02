@@ -1,5 +1,7 @@
 # github.com/davecgh/go-spew v1.1.0
 github.com/davecgh/go-spew/spew
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+github.com/dgrijalva/jwt-go
 # github.com/golang/protobuf v1.3.0
 github.com/golang/protobuf/ptypes/timestamp
 github.com/golang/protobuf/proto

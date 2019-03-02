@@ -1,6 +1,7 @@
 module github.com/ngalayko/p2p
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang/protobuf v1.3.0
 	github.com/gorilla/websocket v1.4.0
 	github.com/square/certstrap v1.1.1
