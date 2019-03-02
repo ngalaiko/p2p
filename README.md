@@ -9,9 +9,8 @@
 
 ```bash
 go get -u github.com/ngalayko/p2p/...
-go install github.com/ngalayko/p2p/cmd/peer
-cd $GOPATH/github.com/ngalayko/p2p
-peer
+cd $GOPATH/src/github.com/ngalayko/p2p
+go run ./cmd/peer/main.go
 open http://127.0.0.1:30003
 ```
 
