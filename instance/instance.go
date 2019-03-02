@@ -36,7 +36,7 @@ func New(
 ) *Instance {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 
-	self, err := peers.New(r, port, insecurePort)
+	self, err := peers.New(r, port, insecurePort, 4096)
 	if err != nil {
 		log.Panic("can't initialize peer: %s", err)
 	}
