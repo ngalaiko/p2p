@@ -48,13 +48,13 @@ func main() {
 	ctx := context.Background()
 
 	go func() {
-		if err := inst.Start(ctx); err != nil {
+		if err := client.Start(ctx); err != nil {
 			panic(err)
 		}
 	}()
 
 	go func() {
-		if err := client.ListenAndServe(); err != nil {
+		if err := inst.Start(ctx); err != nil {
 			panic(err)
 		}
 	}()
