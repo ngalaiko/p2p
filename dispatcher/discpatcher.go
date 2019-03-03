@@ -24,13 +24,16 @@ type Dispatcher struct {
 
 // New is a discpatcher constructor.
 func New(
+	ctx context.Context,
 	log *logger.Logger,
 	jwtSecret string,
+	peerImageName string,
+	peerNetworkName string,
 ) *Dispatcher {
 	return &Dispatcher{
 		logger: log.Prefix("dispatcher"),
 
-		creator:    swarm.New(),
+		creator:    swarm.New(ctx, log, peerImageName, peerNetworkName),
 		authorizer: jwt.New(jwtSecret),
 	}
 }
@@ -76,7 +79,7 @@ func (d *Dispatcher) mainHandler() http.HandlerFunc {
 			return
 		}
 
-		peer, err = d.creator.Create()
+		peer, err = d.creator.Create(r.Context())
 		if err != nil {
 			d.responseError(w, fmt.Errorf("error creating a peer: %s", err))
 			return

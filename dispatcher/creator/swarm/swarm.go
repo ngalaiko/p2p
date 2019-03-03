@@ -1,19 +1,78 @@
 package swarm
 
-import "github.com/ngalayko/p2p/instance/peers"
+import (
+	"context"
+	"fmt"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/swarm"
+	"github.com/docker/docker/client"
+
+	"github.com/ngalayko/p2p/instance/logger"
+	"github.com/ngalayko/p2p/instance/peers"
+)
 
 // Swarm can create a new peer service in the docker swarm.
-type Swarm struct{}
+type Swarm struct {
+	logger *logger.Logger
+
+	cli *client.Client
+
+	networkName string
+	imageName   string
+}
 
 // New is a swarm creator constructor.
-func New() *Swarm {
-	return &Swarm{}
+func New(
+	ctx context.Context,
+	log *logger.Logger,
+	imageName string,
+	networkName string,
+) *Swarm {
+	log = log.Prefix("swarm")
+
+	cli, err := client.NewEnvClient()
+	if err != nil {
+		log.Panic("failed to create docker client: %s", err)
+	}
+
+	log.Info("pulling %s", imageName)
+	_, err = cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	if err != nil {
+		log.Panic("failed to pull image '%': %s", imageName, err)
+	}
+	log.Info("%s is up tp date", imageName)
+
+	return &Swarm{
+		logger: log,
+		cli:    cli,
+	}
 }
 
 // Create implements Creator.
-func (s *Swarm) Create() (*peers.Peer, error) {
+// creates a new docker service in a swarm cluster.
+func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
+	resp, err := s.cli.ServiceCreate(
+		ctx,
+		swarm.ServiceSpec{
+			TaskTemplate: swarm.TaskSpec{
+				ContainerSpec: swarm.ContainerSpec{
+					Image: s.imageName,
+				},
+				Networks: []swarm.NetworkAttachmentConfig{
+					{Target: s.networkName},
+				},
+			},
+		},
+		types.ServiceCreateOptions{},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("can't create docker service: %s", err)
+	}
+
+	fmt.Printf("\nnikitag: %+v\n\n", resp)
+
 	return &peers.Peer{
 		ID: "test",
 	}, nil
-	return nil, nil
 }
