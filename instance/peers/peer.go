@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const idLen = 32
+const idLen = 8
 
 // Peer is an instance of the same app.
 type Peer struct {
