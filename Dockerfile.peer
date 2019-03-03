@@ -1,14 +1,17 @@
 FROM golang:1.11.5-alpine as builder
 
+ARG GOOS=linux
+ARG GOARCH=arm
+
 WORKDIR ${GOPATH}/src/github.com/ngalayko/p2p
 
 COPY . .
 
-RUN go build -o /peer ./cmd/peer/main.go
+RUN GOOS=${GOOS} GOARCH=${GOARCH} go build -o /peer ./cmd/peer/main.go
 
 COPY ./client/public /public
 
-FROM alpine:3.9
+FROM scratch
 
 COPY --from=builder /peer /peer
 COPY --from=builder /public /public

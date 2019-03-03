@@ -44,14 +44,18 @@ func New(
 	log.Info("%s is up tp date", imageName)
 
 	return &Swarm{
-		logger: log,
-		cli:    cli,
+		logger:      log,
+		cli:         cli,
+		imageName:   imageName,
+		networkName: networkName,
 	}
 }
 
 // Create implements Creator.
 // creates a new docker service in a swarm cluster.
 func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
+	s.logger.Info("creating a new instance of '%s' in '%s' network", s.imageName, s.networkName)
+
 	resp, err := s.cli.ServiceCreate(
 		ctx,
 		swarm.ServiceSpec{
@@ -70,7 +74,10 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
 		return nil, fmt.Errorf("can't create docker service: %s", err)
 	}
 
-	fmt.Printf("\nnikitag: %+v\n\n", resp)
+	s.logger.Info("%s created", resp.ID)
+	for _, wn := range resp.Warnings {
+		s.logger.Warning("container %s: %s", wn)
+	}
 
 	return &peers.Peer{
 		ID: "test",

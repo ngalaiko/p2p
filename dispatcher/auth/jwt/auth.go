@@ -58,7 +58,7 @@ func (a *Auth) Store(w http.ResponseWriter, p *peers.Peer) error {
 func (a *Auth) Get(r *http.Request) (*peers.Peer, error) {
 	cookie, err := r.Cookie(cookieName)
 	if err != nil {
-		return nil, fmt.Errorf("can't gett cookie: %s", err)
+		return nil, fmt.Errorf("can't get cookie: %s", err)
 	}
 
 	token, err := jwt.ParseWithClaims(cookie.Value, &customClaims{}, func(token *jwt.Token) (interface{}, error) {

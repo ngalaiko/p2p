@@ -1,0 +1,18 @@
+version: '3'
+
+networks:
+    p2p:
+
+services:
+    dispatcher: 
+        image: ngalayko/dispatcher
+        command: --port=20000 --jwt_secret=secret --network_name=messanger_p2p --image_name=docker.io/ngalayko/peer
+        networks:
+            - p2p
+        ports:
+            - 20000:20000
+        build:
+            dockerfile: ./Dockerfile.dispatcher
+            context: .
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock

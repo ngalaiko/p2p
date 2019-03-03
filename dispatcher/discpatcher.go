@@ -68,18 +68,13 @@ func (d *Dispatcher) Start(ctx context.Context, port string) error {
 // ServeHTTP implements http.Handler.
 func (d *Dispatcher) mainHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		peer, err := d.authorizer.Get(r)
-		if err != nil {
-			d.responseError(w, fmt.Errorf("error getting peer from a token: %s", err))
-			return
-		}
-
+		peer, _ := d.authorizer.Get(r)
 		if peer != nil {
 			w.Write([]byte("found " + peer.ID))
 			return
 		}
 
-		peer, err = d.creator.Create(r.Context())
+		peer, err := d.creator.Create(r.Context())
 		if err != nil {
 			d.responseError(w, fmt.Errorf("error creating a peer: %s", err))
 			return

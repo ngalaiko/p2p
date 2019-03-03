@@ -43,6 +43,14 @@ func (l *Logger) Info(format string, v ...interface{}) {
 	log.Printf(fmt.Sprintf("| INFO | %s | %s%s", location(), l.prefix, format), v...)
 }
 
+// Warning prints info warning log.
+func (l *Logger) Warning(format string, v ...interface{}) {
+	if l.level > LevelWarning {
+		return
+	}
+	log.Printf(fmt.Sprintf("| WARNING | %s | %s%s", location(), l.prefix, format), v...)
+}
+
 // Error prints error level log.
 func (l *Logger) Error(format string, v ...interface{}) {
 	if l.level > LevelError {

@@ -7,15 +7,17 @@ type Level uint
 const (
 	LevelDebug Level = iota
 	LevelInfo
+	LevelWarning
 	LevelError
 	LevelPanic
 )
 
 var names = map[string]Level{
-	"debug": LevelDebug,
-	"info":  LevelInfo,
-	"error": LevelError,
-	"panic": LevelPanic,
+	"debug":   LevelDebug,
+	"info":    LevelInfo,
+	"warning": LevelWarning,
+	"error":   LevelError,
+	"panic":   LevelPanic,
 }
 
 // ParseLevel parses level from string.
