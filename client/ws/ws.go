@@ -8,8 +8,8 @@ import (
 	"github.com/gorilla/websocket"
 
 	"github.com/ngalayko/p2p/instance"
-	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/messages"
+	"github.com/ngalayko/p2p/logger"
 )
 
 // WebSocket serves data to the ui.

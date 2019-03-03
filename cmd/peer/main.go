@@ -8,7 +8,7 @@ import (
 
 	"github.com/ngalayko/p2p/client"
 	"github.com/ngalayko/p2p/instance"
-	"github.com/ngalayko/p2p/instance/logger"
+	"github.com/ngalayko/p2p/logger"
 )
 
 var (

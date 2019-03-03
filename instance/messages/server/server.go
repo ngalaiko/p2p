@@ -6,10 +6,10 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/messages/proto/chat"
 	"github.com/ngalayko/p2p/instance/messages/proto/greeter"
 	"github.com/ngalayko/p2p/instance/peers"
+	"github.com/ngalayko/p2p/logger"
 )
 
 // Server used to receive a connection from another peer.

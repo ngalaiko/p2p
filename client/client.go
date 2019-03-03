@@ -5,7 +5,7 @@ import (
 
 	"github.com/ngalayko/p2p/client/ws"
 	"github.com/ngalayko/p2p/instance"
-	"github.com/ngalayko/p2p/instance/logger"
+	"github.com/ngalayko/p2p/logger"
 )
 
 // UI serves user interface.

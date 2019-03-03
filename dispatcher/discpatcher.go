@@ -10,7 +10,7 @@ import (
 	"github.com/ngalayko/p2p/dispatcher/auth/jwt"
 	"github.com/ngalayko/p2p/dispatcher/creator"
 	"github.com/ngalayko/p2p/dispatcher/creator/swarm"
-	"github.com/ngalayko/p2p/instance/logger"
+	"github.com/ngalayko/p2p/logger"
 )
 
 // Dispatcher redirect clients to it's peers.

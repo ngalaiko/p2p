@@ -13,13 +13,13 @@ import (
 	"google.golang.org/grpc/metadata"
 	grpc_resolver "google.golang.org/grpc/resolver"
 
-	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/messages/client"
 	"github.com/ngalayko/p2p/instance/messages/client/resolver"
 	"github.com/ngalayko/p2p/instance/messages/proto/chat"
 	"github.com/ngalayko/p2p/instance/messages/proto/greeter"
 	"github.com/ngalayko/p2p/instance/messages/server"
 	"github.com/ngalayko/p2p/instance/peers"
+	"github.com/ngalayko/p2p/logger"
 )
 
 var (

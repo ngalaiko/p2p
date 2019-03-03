@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/messages/proto/chat"
 	"github.com/ngalayko/p2p/instance/peers"
+	"github.com/ngalayko/p2p/logger"
 )
 
 const (

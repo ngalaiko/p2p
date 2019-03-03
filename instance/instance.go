@@ -9,9 +9,9 @@ import (
 	"github.com/ngalayko/p2p/instance/discovery"
 	"github.com/ngalayko/p2p/instance/discovery/merge"
 	"github.com/ngalayko/p2p/instance/discovery/udp4"
-	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/messages"
 	"github.com/ngalayko/p2p/instance/peers"
+	"github.com/ngalayko/p2p/logger"
 )
 
 // Instance is a single instance of a p2p messenger.

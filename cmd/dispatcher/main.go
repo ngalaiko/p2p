@@ -5,7 +5,7 @@ import (
 	"flag"
 
 	"github.com/ngalayko/p2p/dispatcher"
-	"github.com/ngalayko/p2p/instance/logger"
+	"github.com/ngalayko/p2p/logger"
 )
 
 var (

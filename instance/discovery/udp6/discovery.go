@@ -7,8 +7,8 @@ import (
 
 	"golang.org/x/net/ipv6"
 
-	"github.com/ngalayko/p2p/instance/logger"
 	"github.com/ngalayko/p2p/instance/peers"
+	"github.com/ngalayko/p2p/logger"
 )
 
 const (
