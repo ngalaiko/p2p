@@ -16,3 +16,9 @@ services:
             context: .
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+
+    peer:
+        image: ngalayko/peer
+        build:
+            dockerfile: ./Dockerfile.peer
+            context: .

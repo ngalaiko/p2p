@@ -9,7 +9,8 @@ COPY . .
 
 RUN GOOS=${GOOS} GOARCH=${GOARCH} go build -o /dispatcher ./cmd/dispatcher/main.go
 
-FROM scratch
+#FROM scratch
+FROM alpine:3.8
 
 COPY --from=builder /dispatcher /dispatcher
 

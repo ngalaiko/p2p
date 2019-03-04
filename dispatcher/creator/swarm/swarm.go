@@ -3,6 +3,9 @@ package swarm
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/swarm"
@@ -61,7 +64,11 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
 		swarm.ServiceSpec{
 			TaskTemplate: swarm.TaskSpec{
 				ContainerSpec: swarm.ContainerSpec{
-					Image: s.imageName,
+					Image:   s.imageName,
+					Command: []string{},
+				},
+				RestartPolicy: &swarm.RestartPolicy{
+					Condition: swarm.RestartPolicyConditionOnFailure,
 				},
 				Networks: []swarm.NetworkAttachmentConfig{
 					{Target: s.networkName},
@@ -79,7 +86,33 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
 		s.logger.Warning("container %s: %s", wn)
 	}
 
-	return &peers.Peer{
-		ID: "test",
-	}, nil
+	inspectResponse, _, err := s.cli.ServiceInspectWithRaw(ctx, resp.ID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting service info: %s", err)
+	}
+
+	s.logger.Info("waiting for service %s to start")
+
+	response := &http.Response{}
+	for range time.Tick(time.Second) {
+		var err error
+		response, err = http.Get(fmt.Sprintf("http://%s:30003/healthcheck", inspectResponse.Spec.Name))
+		if err == nil {
+			break
+		}
+	}
+
+	bytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response: %s", err)
+	}
+	defer response.Body.Close()
+
+	result := &peers.Peer{}
+	if err := result.Unmarshal(bytes); err != nil {
+		return nil, fmt.Errorf("can't unmarshal response: %s", err)
+	}
+
+	s.logger.Info("created peer %s", result.ID)
+	return result, nil
 }
