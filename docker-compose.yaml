@@ -1,24 +1,92 @@
 version: '3'
 
+volumes:
+    consul-data:
+
 networks:
     p2p:
 
 services:
     dispatcher: 
         image: ngalayko/dispatcher
-        command: --port=20000 --jwt_secret=secret --network_name=messanger_p2p --image_name=docker.io/ngalayko/peer
+        command: --port=20000 --jwt_secret=secret --network_name=messanger_p2p --image_name=docker.io/ngalayko/peer --log_level=debug
         networks:
             - p2p
-        ports:
-            - 20000:20000
         build:
             dockerfile: ./Dockerfile.dispatcher
             context: .
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+        deploy:
+            replicas: 1
+            labels:
+                - "traefik.port=20000"
+                - "traefik.frontend.rule=Host:dispatcher.localhost"
 
     peer:
         image: ngalayko/peer
         build:
             dockerfile: ./Dockerfile.peer
             context: .
+
+    traefik:
+        image: traefik:v1.7.9
+        command:
+            - "--api"
+            - "--api.dashboard=true"
+            - "--entrypoints=Name:http Address::80"
+            # - "--entrypoints=Name:https Address::443 TLS Compress:true TLS.MinVersion:VersionTLS12 TLS.CipherSuites:TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+            - "--defaultentrypoints=http,https"
+            #- "--acme"
+            #- "--acme.storage=traefik/acme/account"
+            #- "--acme.dnsChallenge.provider=cloudflare"
+            #- "--acme.dnsChallenge.delayBeforeCheck=0"
+            #- "--acme.entryPoint=https"
+            #- "--acme.OnHostRule=true"
+            #- "--acme.acmeLogging=true"
+            #- "--acme.email=${EMAIL}"
+            - "--docker"
+            - "--docker.domain=localhost"
+            - "--docker.watch=true"
+            - "--docker.swarmmode=true"
+            - "--consul"
+            - "--consul.watch=true"
+            - "--consul.endpoint=consul:8500"
+            - "--consul.prefix=traefik"
+        ports:
+            - 80:80
+            - 443:443
+            - 8080:8080
+        #environment:
+            #- CF_API_EMAIL=${CLOUDFLARE_EMAIL}
+            #- CF_API_KEY=${CLOUDFLARE_TOKEN}
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            - p2p
+        deploy:
+            mode: global
+            placement:
+                constraints: 
+                    - "node.role==manager" 
+            restart_policy:
+                condition: any
+            update_config:
+                parallelism: 1
+                delay: 10s
+
+    consul:
+        image: consul:1.4.3
+        command: agent -bootstrap -server -bootstrap-expect=1 -ui
+        volumes:
+            - consul-data:/consul/data
+        environment:
+            - CONSUL_LOCAL_CONFIG={"server":true}
+            - CONSUL_BIND_INTERFACE=eth0
+            - CONSUL_CLIENT_INTERFACE=eth0
+        networks:
+            - p2p
+        deploy:
+            replicas: 1
+            restart_policy:
+                condition: any
