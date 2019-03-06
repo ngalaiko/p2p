@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -56,7 +57,7 @@ func New(
 
 // Create implements Creator.
 // creates a new docker service in a swarm cluster.
-func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
+func (s *Swarm) Create(ctx context.Context) (*peers.Peer, *url.URL, error) {
 	s.logger.Info("creating a new instance of '%s' in '%s' network", s.imageName, s.networkName)
 
 	resp, err := s.cli.ServiceCreate(
@@ -78,7 +79,7 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
 		types.ServiceCreateOptions{},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("can't create docker service: %s", err)
+		return nil, nil, fmt.Errorf("can't create docker service: %s", err)
 	}
 
 	s.logger.Info("%s created", resp.ID)
@@ -88,10 +89,12 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
 
 	inspectResponse, _, err := s.cli.ServiceInspectWithRaw(ctx, resp.ID)
 	if err != nil {
-		return nil, fmt.Errorf("error getting service info: %s", err)
+		return nil, nil, fmt.Errorf("error getting service info: %s", err)
 	}
 
-	s.logger.Info("waiting for service %s to start")
+	s.logger.Info("waiting for service %s to start", inspectResponse.Spec.Name)
+
+	start := time.Now()
 
 	response := &http.Response{}
 	for range time.Tick(time.Second) {
@@ -101,18 +104,25 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, error) {
 			break
 		}
 	}
+	s.logger.Info("service %s took %s to start", inspectResponse.Spec.Name, time.Since(start))
 
 	bytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading response: %s", err)
+		return nil, nil, fmt.Errorf("error reading response: %s", err)
 	}
 	defer response.Body.Close()
 
 	result := &peers.Peer{}
 	if err := result.Unmarshal(bytes); err != nil {
-		return nil, fmt.Errorf("can't unmarshal response: %s", err)
+		return nil, nil, fmt.Errorf("can't unmarshal response: %s", err)
 	}
 
-	s.logger.Info("created peer %s", result.ID)
-	return result, nil
+	u, err := url.Parse(fmt.Sprintf("http://%s:30003", inspectResponse.Spec.Name))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	s.logger.Info("created peer %s on %s", result.ID, u)
+
+	return result, u, nil
 }
