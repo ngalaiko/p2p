@@ -14,5 +14,6 @@ require (
 	github.com/square/certstrap v1.1.1
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/net v0.0.0-20190228165749-92fc7df08ae7
+	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
 	google.golang.org/grpc v1.19.0
 )

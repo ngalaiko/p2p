@@ -10,16 +10,20 @@ import (
 	"github.com/ngalayko/p2p/dispatcher/auth/jwt"
 	"github.com/ngalayko/p2p/dispatcher/creator"
 	"github.com/ngalayko/p2p/dispatcher/creator/swarm"
+	"github.com/ngalayko/p2p/dispatcher/registrar"
+	"github.com/ngalayko/p2p/dispatcher/registrar/traefik"
 	"github.com/ngalayko/p2p/logger"
 )
 
 // Dispatcher redirect clients to it's peers.
 type Dispatcher struct {
 	logger *logger.Logger
-	srv    *http.Server
+
+	host string
 
 	creator    creator.Creator
 	authorizer auth.Authorizer
+	registrar  registrar.Registrar
 }
 
 // New is a discpatcher constructor.
@@ -27,14 +31,19 @@ func New(
 	ctx context.Context,
 	log *logger.Logger,
 	jwtSecret string,
+	host string,
 	peerImageName string,
 	peerNetworkName string,
+	consulURL string,
 ) *Dispatcher {
 	return &Dispatcher{
 		logger: log.Prefix("dispatcher"),
 
+		host: host,
+
 		creator:    swarm.New(ctx, log, peerImageName, peerNetworkName),
 		authorizer: jwt.New(jwtSecret),
+		registrar:  traefik.New(log, consulURL),
 	}
 }
 
@@ -74,9 +83,14 @@ func (d *Dispatcher) mainHandler() http.HandlerFunc {
 			return
 		}
 
-		peer, err := d.creator.Create(r.Context())
+		peer, url, err := d.creator.Create(r.Context())
 		if err != nil {
 			d.responseError(w, fmt.Errorf("error creating a peer: %s", err))
+			return
+		}
+
+		if err := d.registrar.Register(peer, url, d.host); err != nil {
+			d.responseError(w, fmt.Errorf("error registring a peer: %s", err))
 			return
 		}
 
