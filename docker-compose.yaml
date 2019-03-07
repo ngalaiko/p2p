@@ -21,7 +21,7 @@ services:
             replicas: 1
             labels:
                 - "traefik.port=20000"
-                - "traefik.frontend.rule=Host:dispatcher.localhost"
+                - "traefik.frontend.rule=Host:localhost"
 
     peer:
         image: ngalayko/peer

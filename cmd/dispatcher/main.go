@@ -15,7 +15,7 @@ var (
 	peerImageName   = flag.String("image_name", "docker.io/ngalayko/peer", "name of the peer image to pull")
 	peerNetworkName = flag.String("network_name", "p2p", "name of the peer docker network")
 	consulURL       = flag.String("consul", "http://consul:8500", "url to contact consul kv api")
-	host            = flag.String("hostname", "localhost", "hostname of the dispatcher")
+	staticPath      = flag.String("staticPath", "./dispatcher/public", "path to static files")
 )
 
 func main() {
@@ -27,13 +27,12 @@ func main() {
 		ctx,
 		logger.New(logger.ParseLevel(*logLevel)),
 		*jwtSecret,
-		*host,
 		*peerImageName,
 		*peerNetworkName,
 		*consulURL,
 	)
 
-	if err := d.Start(ctx, *port); err != nil {
+	if err := d.Start(ctx, *port, *staticPath); err != nil {
 		panic(err)
 	}
 }
