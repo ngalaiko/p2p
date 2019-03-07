@@ -9,9 +9,11 @@ COPY . .
 
 RUN GOOS=${GOOS} GOARCH=${GOARCH} go build -o /dispatcher ./cmd/dispatcher/main.go
 
-#FROM scratch
-FROM alpine:3.8
+COPY ./dispatcher/public /public
+
+FROM scratch
 
 COPY --from=builder /dispatcher /dispatcher
+COPY --from=builder /public /public
 
-ENTRYPOINT [ "/dispatcher" ]
+ENTRYPOINT [ "/dispatcher", "--staticPath=/public" ]

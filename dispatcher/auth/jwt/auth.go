@@ -8,18 +8,24 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 
 	"github.com/ngalayko/p2p/instance/peers"
+	"github.com/ngalayko/p2p/logger"
 )
 
 const cookieName = "auth"
 
 // Auth stores peer as a jwt token in cookies.
 type Auth struct {
+	logger *logger.Logger
 	secret []byte
 }
 
 // New is a mock auth constructor.
-func New(secret string) *Auth {
+func New(
+	log *logger.Logger,
+	secret string,
+) *Auth {
 	return &Auth{
+		logger: log.Prefix("jwt"),
 		secret: []byte(secret),
 	}
 }
@@ -46,10 +52,11 @@ func (a *Auth) Store(w http.ResponseWriter, p *peers.Peer) error {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     cookieName,
-		Value:    tokenString,
-		HttpOnly: true,
+		Name:  cookieName,
+		Value: tokenString,
 	})
+
+	a.logger.Debug("stored peer %s in %s", p.ID, cookieName)
 
 	return nil
 }
@@ -58,6 +65,7 @@ func (a *Auth) Store(w http.ResponseWriter, p *peers.Peer) error {
 func (a *Auth) Get(r *http.Request) (*peers.Peer, error) {
 	cookie, err := r.Cookie(cookieName)
 	if err != nil {
+		a.logger.Debug("%s is empty", cookieName)
 		return nil, fmt.Errorf("can't get cookie: %s", err)
 	}
 
@@ -72,6 +80,8 @@ func (a *Auth) Get(r *http.Request) (*peers.Peer, error) {
 	if !ok {
 		return nil, fmt.Errorf("unexpected claims: %v", token.Claims)
 	}
+
+	a.logger.Debug("got peer %s from %s", claims.Peer.ID, cookieName)
 
 	return claims.Peer, nil
 }

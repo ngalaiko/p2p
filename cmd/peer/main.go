@@ -27,6 +27,7 @@ func main() {
 	flag.Parse()
 
 	log := logger.New(logger.ParseLevel(*logLevel))
+	log.Prefix("main").Info("starting...")
 
 	inst := instance.New(
 		log,

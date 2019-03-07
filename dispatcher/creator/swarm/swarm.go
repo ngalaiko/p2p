@@ -92,7 +92,7 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, *url.URL, error) {
 		return nil, nil, fmt.Errorf("error getting service info: %s", err)
 	}
 
-	s.logger.Info("waiting for service %s to start", inspectResponse.Spec.Name)
+	s.logger.Info("waiting for service %s (%s) to start", inspectResponse.Spec.Name, resp.ID)
 
 	start := time.Now()
 

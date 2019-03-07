@@ -11,8 +11,7 @@ RUN GOOS=${GOOS} GOARCH=${GOARCH} go build -o /peer ./cmd/peer/main.go
 
 COPY ./client/public /public
 
-#FROM scratch
-FROM alpine:3.8
+FROM scratch
 
 COPY --from=builder /peer /peer
 COPY --from=builder /public /public
