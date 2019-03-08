@@ -11,6 +11,7 @@ import (
 	"github.com/ngalayko/p2p/dispatcher/auth"
 	"github.com/ngalayko/p2p/dispatcher/auth/jwt"
 	"github.com/ngalayko/p2p/dispatcher/creator"
+	"github.com/ngalayko/p2p/dispatcher/creator/pool"
 	"github.com/ngalayko/p2p/dispatcher/creator/swarm"
 	"github.com/ngalayko/p2p/dispatcher/registrar"
 	"github.com/ngalayko/p2p/dispatcher/registrar/traefik"
@@ -35,11 +36,16 @@ func New(
 	peerImageName string,
 	peerNetworkName string,
 	consulURL string,
+	buffer int,
 ) *Dispatcher {
 	return &Dispatcher{
 		logger: log.Prefix("dispatcher"),
 
-		creator:    swarm.New(ctx, log, peerImageName, peerNetworkName),
+		creator: pool.New(
+			log,
+			swarm.New(ctx, log, peerImageName, peerNetworkName),
+			buffer,
+		),
 		authorizer: jwt.New(log, jwtSecret),
 		registrar:  traefik.New(log, consulURL),
 	}
