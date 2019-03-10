@@ -16,6 +16,7 @@ var (
 	peerNetworkName = flag.String("network_name", "p2p", "name of the peer docker network")
 	consulURL       = flag.String("consul", "http://consul:8500", "url to contact consul kv api")
 	staticPath      = flag.String("staticPath", "./dispatcher/public", "path to static files")
+	buffer          = flag.Int("buffer", 3, "number peers to create in advance")
 )
 
 func main() {
@@ -30,6 +31,7 @@ func main() {
 		*peerImageName,
 		*peerNetworkName,
 		*consulURL,
+		*buffer,
 	)
 
 	if err := d.Start(ctx, *port, *staticPath); err != nil {
