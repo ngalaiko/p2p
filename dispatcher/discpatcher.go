@@ -129,7 +129,7 @@ func (d *Dispatcher) dispatchHandler() http.HandlerFunc {
 			return
 		}
 
-		if err := d.registrar.Register(peer, url, r.URL.Host); err != nil {
+		if err := d.registrar.Register(peer, url, referer.Host); err != nil {
 			responseError(w, fmt.Errorf("error registring a peer: %s", err))
 			return
 		}

@@ -21,6 +21,7 @@ var (
 	uiPort            = flag.String("ui_port", "30003", "port to serve ui interface")
 	discoveryInterval = flag.Duration("discovery_interval", 1*time.Second, "interval to send discovery broadcast")
 	statisPath        = flag.String("static_path", "./client/public", "path to static files for ui")
+	keySize           = flag.Int("key_size", 1024, "private key size")
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 		*port,
 		*insecurePort,
 		*discoveryInterval,
+		*keySize,
 	)
 
 	client := client.New(

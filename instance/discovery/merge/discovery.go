@@ -24,8 +24,8 @@ func New(dd ...discovery.Discovery) *Discovery {
 func (d *Discovery) Discover(ctx context.Context) <-chan *peers.Peer {
 	out := make(chan *peers.Peer)
 	wg := &sync.WaitGroup{}
-	wg.Add(len(d.dd))
 	for _, d := range d.dd {
+		wg.Add(1)
 		go func(c <-chan *peers.Peer) {
 			for v := range c {
 				out <- v
