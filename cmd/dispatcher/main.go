@@ -14,7 +14,7 @@ var (
 	jwtSecret       = flag.String("jwt_secret", "secret", "secret to sign jwt tokens with")
 	peerImageName   = flag.String("image_name", "docker.io/ngalayko/peer", "name of the peer image to pull")
 	peerNetworkName = flag.String("network_name", "p2p", "name of the peer docker network")
-	consulURL       = flag.String("consul", "http://consul:8500", "url to contact consul kv api")
+	consulURL       = flag.String("consul", "consul:8500", "url to contact consul catalog")
 	staticPath      = flag.String("staticPath", "./dispatcher/public", "path to static files")
 	buffer          = flag.Int("buffer", 3, "number peers to create in advance")
 	peerKeySize     = flag.Int("peer_key_size", 1096, "key size for peers")
