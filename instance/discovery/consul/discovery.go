@@ -57,8 +57,9 @@ func New(
 // Discover implements Discovery.
 func (d *Discovery) Discover(ctx context.Context) <-chan *peers.Peer {
 	go func() {
-		if err := d.register(); err != nil {
+		for err := d.register(); err != nil; {
 			d.logger.Error("failed to register: %s", err)
+			time.Sleep(d.interval)
 		}
 	}()
 
@@ -90,11 +91,15 @@ func (d *Discovery) discover(ctx context.Context) <-chan *peers.Peer {
 					continue
 				}
 				for _, s := range ss {
+					if _, ok := s.Meta["peer"]; !ok {
+						continue
+					}
 					p, err := d.getPeer(fmt.Sprintf("http://%s:%d", s.Address, s.Port))
 					if err != nil {
 						d.logger.Error("can't get peer %s info: %s", s.Service, err)
 						continue
 					}
+					p.Addrs.Add(net.ParseIP(s.Address))
 					out <- p
 				}
 			}
@@ -146,6 +151,9 @@ func (d *Discovery) register() error {
 		Name:    d.self.ID,
 		Port:    d.self.UIPort,
 		Address: localAddr,
+		Meta: map[string]string{
+			"peer": "true",
+		},
 		Tags: []string{
 			"traefik.backend.loadbalancer.stickiness=true",
 		},

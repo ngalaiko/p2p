@@ -44,7 +44,7 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go ws.watchUpdates(conn)
+	go ws.watchUpdates(r.Context(), conn)
 
 	if err := conn.WriteJSON(newInitMessage(ws.instance.Peer)); err != nil {
 		ws.log.Error("error writing init message to %s: %s", origin, err)
@@ -52,30 +52,40 @@ func (ws *WebSocket) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for {
-		_, data, err := conn.ReadMessage()
-		if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-			ws.log.Error("error reading message from %s: %s", origin, err)
-			continue
-		}
+		select {
+		case <-r.Context().Done():
+			conn.Close()
+			break
+		default:
+			_, data, err := conn.ReadMessage()
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					ws.log.Error("error reading message from %s: %s", origin, err)
+				}
+				break
+			}
 
-		m := &message{}
-		if err := json.Unmarshal(data, m); err != nil {
-			continue
-		}
-
-		switch m.Type {
-		case messageTypeTextSent:
-			if err := ws.instance.SendText(context.Background(), m.Message.Text, m.Message.To.ID); err != nil {
-				ws.log.Error("can't send message: %s", err)
+			m := &message{}
+			if err := json.Unmarshal(data, m); err != nil {
 				continue
+			}
+
+			switch m.Type {
+			case messageTypeTextSent:
+				if err := ws.instance.SendText(context.Background(), m.Message.Text, m.Message.To.ID); err != nil {
+					ws.log.Error("can't send message: %s", err)
+					continue
+				}
 			}
 		}
 	}
 }
 
-func (ws *WebSocket) watchUpdates(conn *websocket.Conn) {
+func (ws *WebSocket) watchUpdates(ctx context.Context, conn *websocket.Conn) {
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case <-ws.instance.KnownPeers.Updated():
 			for _, peer := range ws.instance.KnownPeers.Map() {
 				if err := conn.WriteJSON(newPeerAddedMessage(peer)); err != nil {

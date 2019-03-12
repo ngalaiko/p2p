@@ -24,6 +24,9 @@ type Swarm struct {
 
 	networkName string
 	imageName   string
+
+	consulAddr string
+	keySize    int
 }
 
 // New is a swarm creator constructor.
@@ -32,6 +35,8 @@ func New(
 	log *logger.Logger,
 	imageName string,
 	networkName string,
+	consulAddr string,
+	keySize int,
 ) *Swarm {
 	log = log.Prefix("swarm")
 
@@ -52,6 +57,8 @@ func New(
 		cli:         cli,
 		imageName:   imageName,
 		networkName: networkName,
+		consulAddr:  consulAddr,
+		keySize:     keySize,
 	}
 }
 
@@ -65,8 +72,14 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, *url.URL, error) {
 		swarm.ServiceSpec{
 			TaskTemplate: swarm.TaskSpec{
 				ContainerSpec: swarm.ContainerSpec{
-					Image:   s.imageName,
-					Command: []string{},
+					Image: s.imageName,
+					Args: []string{
+						"--udp4_multicast=",
+						"--udp6_multicast=",
+						fmt.Sprintf("--consul=%s", s.consulAddr),
+						"--discovery_interval=3s",
+						fmt.Sprintf("--key_size=%d", s.keySize),
+					},
 				},
 				RestartPolicy: &swarm.RestartPolicy{
 					Condition: swarm.RestartPolicyConditionOnFailure,

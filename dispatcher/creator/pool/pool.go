@@ -3,8 +3,10 @@ package pool
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/ngalayko/p2p/dispatcher/creator"
 	"github.com/ngalayko/p2p/instance/peers"
@@ -43,6 +45,7 @@ func New(
 		pool:      map[string]*instance{},
 	}
 	for i := 0; i < size; i++ {
+		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 		go p.push()
 	}
 	return p

@@ -22,7 +22,7 @@ services:
 
     peer:
         image: ngalayko/peer
-        command: --udp4_multicast= --udp6_multicast=
+        command: --udp4_multicast= --udp6_multicast= --consul=consul:8500
         networks: 
             - p2p
         build:
