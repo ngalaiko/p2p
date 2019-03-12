@@ -16,8 +16,9 @@ type Peer struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 
-	Port         string `json:"port"`
-	InsecurePort string `json:"insecure_port"`
+	Port         int `json:"port"`
+	InsecurePort int `json:"insecure_port"`
+	UIPort       int `json:"ui_port"`
 
 	KnownPeers *peersList `json:"known_peers"`
 
@@ -30,8 +31,9 @@ type Peer struct {
 // New is a peer constructor.
 func New(
 	r *rand.Rand,
-	port string,
-	insecurePort string,
+	port int,
+	insecurePort int,
+	uiPort int,
 	keySize int,
 ) (*Peer, error) {
 	idBytes := make([]byte, idLen)
@@ -46,6 +48,7 @@ func New(
 		KnownPeers:   newPeersList(),
 		Addrs:        newAddrsList(),
 		Port:         port,
+		UIPort:       uiPort,
 		InsecurePort: insecurePort,
 	}
 

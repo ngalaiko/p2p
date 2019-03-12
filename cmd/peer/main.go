@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"flag"
-	"net"
+	"fmt"
 	"time"
 
 	"github.com/ngalayko/p2p/client"
@@ -15,10 +15,11 @@ var (
 	logLevel          = flag.String("log_level", "info", "logging level [debug|info|warning|error|panic]")
 	udp6Multicast     = flag.String("udp6_multicast", "[ff02::114]", "multicast addr for udp6 discrvery")
 	udp4Multicast     = flag.String("udp4_multicast", "239.255.255.250", "multicast addr for udp4 discrvery")
-	port              = flag.String("port", "30000", "port to listen for messages")
-	insecurePort      = flag.String("insecure_port", "30001", "port to listen for greetings")
+	consulAddr        = flag.String("consul", "consul:8500", "consul address")
+	port              = flag.Int("port", 30000, "port to listen for messages")
+	insecurePort      = flag.Int("insecure_port", 30001, "port to listen for greetings")
 	discoveryPort     = flag.String("discovery_port", "30002", "port to discover other peers")
-	uiPort            = flag.String("ui_port", "30003", "port to serve ui interface")
+	uiPort            = flag.Int("ui_port", 30003, "port to serve ui interface")
 	discoveryInterval = flag.Duration("discovery_interval", 1*time.Second, "interval to send discovery broadcast")
 	statisPath        = flag.String("static_path", "./client/public", "path to static files for ui")
 	keySize           = flag.Int("key_size", 1024, "private key size")
@@ -34,7 +35,9 @@ func main() {
 		log,
 		*udp4Multicast,
 		*udp6Multicast,
+		*consulAddr,
 		*discoveryPort,
+		*uiPort,
 		*port,
 		*insecurePort,
 		*discoveryInterval,
@@ -43,7 +46,7 @@ func main() {
 
 	client := client.New(
 		log,
-		net.JoinHostPort("0.0.0.0", *uiPort),
+		fmt.Sprintf("0.0.0.0:%d", *uiPort),
 		inst,
 		*statisPath,
 	)

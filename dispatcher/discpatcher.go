@@ -13,8 +13,6 @@ import (
 	"github.com/ngalayko/p2p/dispatcher/creator"
 	"github.com/ngalayko/p2p/dispatcher/creator/pool"
 	"github.com/ngalayko/p2p/dispatcher/creator/swarm"
-	"github.com/ngalayko/p2p/dispatcher/registrar"
-	"github.com/ngalayko/p2p/dispatcher/registrar/traefik"
 	"github.com/ngalayko/p2p/instance/peers"
 	"github.com/ngalayko/p2p/logger"
 )
@@ -25,7 +23,6 @@ type Dispatcher struct {
 
 	creator    creator.Creator
 	authorizer auth.Authorizer
-	registrar  registrar.Registrar
 }
 
 // New is a discpatcher constructor.
@@ -47,7 +44,6 @@ func New(
 			buffer,
 		),
 		authorizer: jwt.New(log, jwtSecret),
-		registrar:  traefik.New(log, consulURL),
 	}
 }
 
@@ -123,14 +119,9 @@ func (d *Dispatcher) dispatchHandler() http.HandlerFunc {
 			return
 		}
 
-		peer, url, err := d.creator.Create(r.Context())
+		peer, _, err = d.creator.Create(r.Context())
 		if err != nil {
 			responseError(w, fmt.Errorf("error creating a peer: %s", err))
-			return
-		}
-
-		if err := d.registrar.Register(peer, url, referer.Host); err != nil {
-			responseError(w, fmt.Errorf("error registring a peer: %s", err))
 			return
 		}
 
