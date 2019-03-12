@@ -57,8 +57,9 @@ func New(
 // Discover implements Discovery.
 func (d *Discovery) Discover(ctx context.Context) <-chan *peers.Peer {
 	go func() {
-		if err := d.register(); err != nil {
+		for err := d.register(); err != nil; {
 			d.logger.Error("failed to register: %s", err)
+			time.Sleep(d.interval)
 		}
 	}()
 
