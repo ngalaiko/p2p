@@ -25,6 +25,9 @@ services:
 
     peer:
         image: ngalayko/peer
+        command: --udp4_multicast= --udp6_multicast=
+        networks: 
+            - p2p
         build:
             dockerfile: ./Dockerfile.peer
             context: .
@@ -49,10 +52,9 @@ services:
             - "--docker.domain=localhost"
             - "--docker.watch=true"
             - "--docker.swarmmode=true"
-            - "--consul"
-            - "--consul.watch=true"
-            - "--consul.endpoint=consul:8500"
-            - "--consul.prefix=traefik"
+            - "--consulCatalog.endpoint=consul:8500"
+            - "--consulCatalog.domain=localhost"
+            - "--consulCatalog.frontendRule=Host:{{.ServiceName}}.{{.Domain}}"
         ports:
             - 80:80
             - 443:443
@@ -78,8 +80,8 @@ services:
     consul:
         image: consul:1.4.3
         command: agent -bootstrap -server -bootstrap-expect=1 -ui
-        volumes:
-            - consul-data:/consul/data
+        #volumes:
+            #- consul-data:/consul/data
         environment:
             - CONSUL_LOCAL_CONFIG={"server":true}
             - CONSUL_BIND_INTERFACE=eth0
@@ -90,3 +92,6 @@ services:
             replicas: 1
             restart_policy:
                 condition: any
+            labels:
+                - "traefik.port=8500"
+                - "traefik.frontend.rule=Host:consul-ui.localhost"

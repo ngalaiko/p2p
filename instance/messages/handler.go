@@ -88,12 +88,12 @@ func NewHandler(
 
 // Start starts the server.
 func (h *Handler) Start(ctx context.Context) error {
-	lis, err := net.Listen("tcp", net.JoinHostPort("0.0.0.0", h.self.Port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", h.self.Port))
 	if err != nil {
 		return err
 	}
 
-	insecureL, err := net.Listen("tcp", net.JoinHostPort("0.0.0.0", h.self.InsecurePort))
+	insecureL, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", h.self.InsecurePort))
 	if err != nil {
 		return err
 	}

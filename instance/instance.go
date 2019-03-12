@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/ngalayko/p2p/instance/discovery"
+	"github.com/ngalayko/p2p/instance/discovery/consul"
 	"github.com/ngalayko/p2p/instance/discovery/merge"
 	"github.com/ngalayko/p2p/instance/discovery/udp4"
+	"github.com/ngalayko/p2p/instance/discovery/udp6"
 	"github.com/ngalayko/p2p/instance/messages"
 	"github.com/ngalayko/p2p/instance/peers"
 	"github.com/ngalayko/p2p/logger"
@@ -29,30 +31,41 @@ func New(
 	log *logger.Logger,
 	udp4Multicast string,
 	udp6Multicast string,
+	consulAddr string,
 	discoveryPort string,
-	port string,
-	insecurePort string,
-	discroverInterval time.Duration,
+	uiPort int,
+	port int,
+	insecurePort int,
+	discoveryInterval time.Duration,
+	keySize int,
 ) *Instance {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 
-	self, err := peers.New(r, port, insecurePort, 4096)
+	self, err := peers.New(r, port, insecurePort, uiPort, keySize)
 	if err != nil {
 		log.Panic("can't initialize peer: %s", err)
 	}
 
-	log.Info("peer id: %s", self.ID)
+	log.Info("peer id: %s, name: %s", self.ID, self.Name)
 
 	msgHandler := messages.NewHandler(r, log, self)
 
+	dd := []discovery.Discovery{}
+	if udp6Multicast != "" {
+		dd = append(dd, udp6.New(log, fmt.Sprintf("%s:%s", udp6Multicast, discoveryPort), discoveryInterval, self))
+	}
+	if udp4Multicast != "" {
+		dd = append(dd, udp4.New(log, fmt.Sprintf("%s:%s", udp4Multicast, discoveryPort), discoveryInterval, self))
+	}
+	if consulAddr != "" {
+		dd = append(dd, consul.New(log, self, consulAddr, discoveryInterval))
+	}
+
 	return &Instance{
-		Handler: msgHandler,
-		Peer:    self,
-		logger:  log,
-		discovery: merge.New(
-			//udp6.New(log, fmt.Sprintf("%s:%s", udp6Multicast, discoveryPort), discroverInterval, self),
-			udp4.New(log, fmt.Sprintf("%s:%s", udp4Multicast, discoveryPort), discroverInterval, self),
-		),
+		Handler:   msgHandler,
+		Peer:      self,
+		logger:    log,
+		discovery: merge.New(dd...),
 	}
 }
 

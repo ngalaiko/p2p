@@ -44,11 +44,11 @@ func (b *Builder) Add(peer *peers.Peer) {
 	b.guard.Unlock()
 }
 
-func makeAddr(ip net.IP, port string) string {
+func makeAddr(ip net.IP, port int) string {
 	if ip.To4() == nil {
-		return fmt.Sprintf("[%s]:%s", ip.String(), port)
+		return fmt.Sprintf("[%s]:%d", ip.String(), port)
 	}
-	return fmt.Sprintf("%s:%s", ip.String(), port)
+	return fmt.Sprintf("%s:%d", ip.String(), port)
 }
 
 // Build implements grpc.Builder.
