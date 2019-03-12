@@ -34,13 +34,14 @@ func New(
 	peerNetworkName string,
 	consulURL string,
 	buffer int,
+	peerKeySize int,
 ) *Dispatcher {
 	return &Dispatcher{
 		logger: log.Prefix("dispatcher"),
 
 		creator: pool.New(
 			log,
-			swarm.New(ctx, log, peerImageName, peerNetworkName),
+			swarm.New(ctx, log, peerImageName, peerNetworkName, consulURL, peerKeySize),
 			buffer,
 		),
 		authorizer: jwt.New(log, jwtSecret),

@@ -17,6 +17,7 @@ var (
 	consulURL       = flag.String("consul", "http://consul:8500", "url to contact consul kv api")
 	staticPath      = flag.String("staticPath", "./dispatcher/public", "path to static files")
 	buffer          = flag.Int("buffer", 3, "number peers to create in advance")
+	peerKeySize     = flag.Int("peer_key_size", 1096, "key size for peers")
 )
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 		*peerNetworkName,
 		*consulURL,
 		*buffer,
+		*peerKeySize,
 	)
 
 	if err := d.Start(ctx, *port, *staticPath); err != nil {
