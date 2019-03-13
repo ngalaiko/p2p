@@ -55,6 +55,10 @@ func New(
 		log.Panic("failed to create consul client: %s", err)
 	}
 
+	if _, err := consulCli.Status().Leader(); err != nil {
+		log.Panic("can't connect to consul: %s", err)
+	}
+
 	s := &Swarm{
 		logger:          log,
 		swarmCli:        swarmCli,

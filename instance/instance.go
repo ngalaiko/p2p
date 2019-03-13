@@ -83,6 +83,9 @@ func (i *Instance) watchPeers(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case peer := <-newPeers:
+			if peer == nil {
+				continue
+			}
 			if peer.ID != i.ID {
 				i.KnownPeers.Add(peer)
 				continue

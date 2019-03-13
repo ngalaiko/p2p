@@ -44,6 +44,10 @@ func New(
 		log.Panic("can't connect to consul: %s", err)
 	}
 
+	if _, err := client.Status().Leader(); err != nil {
+		log.Panic("can't connect to consul: %s", err)
+	}
+
 	return &Discovery{
 		logger:     log,
 		host:       consulHost,
@@ -158,13 +162,23 @@ func (d *Discovery) register() error {
 		Tags: []string{
 			"traefik.backend.loadbalancer.stickiness=true",
 		},
-		Check: &consul.AgentServiceCheck{
-			CheckID:  "ui",
-			Name:     "UI access",
-			HTTP:     fmt.Sprintf("http://%s:%d/", localAddr, d.self.UIPort),
-			Method:   http.MethodGet,
-			Interval: fmt.Sprintf("%s", 10*time.Second),
-			Timeout:  fmt.Sprintf("%s", 1*time.Second),
+		Checks: []*consul.AgentServiceCheck{
+			&consul.AgentServiceCheck{
+				CheckID:  "healthcheck",
+				Name:     "Healthcheck",
+				HTTP:     fmt.Sprintf("http://%s:%d/healthcheck", localAddr, d.self.UIPort),
+				Method:   http.MethodGet,
+				Interval: fmt.Sprintf("%s", 10*time.Second),
+				Timeout:  fmt.Sprintf("%s", 1*time.Second),
+			},
+			&consul.AgentServiceCheck{
+				CheckID:  "ui",
+				Name:     "UI access",
+				HTTP:     fmt.Sprintf("http://%s:%d/", localAddr, d.self.UIPort),
+				Method:   http.MethodGet,
+				Interval: fmt.Sprintf("%s", 10*time.Second),
+				Timeout:  fmt.Sprintf("%s", 1*time.Second),
+			},
 		},
 	}
 
