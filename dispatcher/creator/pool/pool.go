@@ -44,6 +44,7 @@ func New(
 		poolGuard: &sync.RWMutex{},
 		pool:      map[string]*instance{},
 	}
+	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < size; i++ {
 		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 		go p.push()

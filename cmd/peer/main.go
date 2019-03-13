@@ -33,7 +33,8 @@ func main() {
 	log := logger.New(logger.ParseLevel(*logLevel)).Prefix("main")
 	log.Info("starting...")
 
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixNano())
+
 	d := time.Duration(rand.Intn(int(*delay))) * time.Nanosecond
 	log.Info("waiting for %s", d)
 	time.Sleep(d)

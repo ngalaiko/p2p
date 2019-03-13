@@ -39,7 +39,7 @@ func New(
 	discoveryInterval time.Duration,
 	keySize int,
 ) *Instance {
-	r := rand.New(rand.NewSource(time.Now().Unix()))
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	self, err := peers.New(r, port, insecurePort, uiPort, keySize)
 	if err != nil {
