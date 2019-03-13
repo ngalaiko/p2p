@@ -164,7 +164,7 @@ func (d *Discovery) register() error {
 		},
 		Checks: []*consul.AgentServiceCheck{
 			&consul.AgentServiceCheck{
-				CheckID:  "healthcheck",
+				CheckID:  fmt.Sprintf("%s-healthcheck", d.self.ID),
 				Name:     "Healthcheck",
 				HTTP:     fmt.Sprintf("http://%s:%d/healthcheck", localAddr, d.self.UIPort),
 				Method:   http.MethodGet,
@@ -172,7 +172,7 @@ func (d *Discovery) register() error {
 				Timeout:  fmt.Sprintf("%s", 1*time.Second),
 			},
 			&consul.AgentServiceCheck{
-				CheckID:  "ui",
+				CheckID:  fmt.Sprintf("%s-ui", d.self.ID),
 				Name:     "UI access",
 				HTTP:     fmt.Sprintf("http://%s:%d/", localAddr, d.self.UIPort),
 				Method:   http.MethodGet,
