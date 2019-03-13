@@ -5,6 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"math/rand"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/ngalayko/p2p/client"
@@ -59,7 +62,7 @@ func main() {
 		*statisPath,
 	)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		if err := client.Start(ctx); err != nil {
@@ -73,5 +76,23 @@ func main() {
 		}
 	}()
 
-	<-ctx.Done()
+	sigs := make(chan os.Signal, 1)
+	go func() {
+		signal.Notify(
+			sigs,
+			syscall.SIGINT,
+			syscall.SIGTERM,
+			syscall.SIGKILL,
+			syscall.SIGQUIT,
+			syscall.SIGSTOP,
+		)
+	}()
+
+	s := <-sigs
+
+	log.Info("got signal %s, waiting 5 seconds before shutting down", s)
+
+	cancel()
+
+	time.Sleep(5 * time.Second)
 }
