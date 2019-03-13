@@ -186,5 +186,6 @@ func (d *Discovery) register() error {
 }
 
 func (d *Discovery) deregister() error {
+	d.logger.Info("deregistring")
 	return d.client.Agent().ServiceDeregister(d.self.ID)
 }
