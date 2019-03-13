@@ -4,30 +4,22 @@ networks:
     p2p:
 
 services:
-    dispatcher: 
-        image: ngalayko/dispatcher
-        command: --port=20000 --jwt_secret=secret --network_name=messenger_p2p --image_name=docker.io/ngalayko/peer --log_level=debug
+    consul:
+        image: consul:1.4.3
+        command: agent -bootstrap -server -bootstrap-expect=1 -ui
+        environment:
+            - CONSUL_LOCAL_CONFIG={"server":true}
+            - CONSUL_BIND_INTERFACE=eth0
+            - CONSUL_CLIENT_INTERFACE=eth0
         networks:
             - p2p
-        build:
-            dockerfile: ./Dockerfile.dispatcher
-            context: .
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
         deploy:
             replicas: 1
+            restart_policy:
+                condition: any
             labels:
-                - "traefik.port=20000"
-                - "traefik.frontend.rule=Host:localhost"
-
-    peer:
-        image: ngalayko/peer
-        command: --udp4_multicast= --udp6_multicast= --consul=consul:8500
-        networks: 
-            - p2p
-        build:
-            dockerfile: ./Dockerfile.peer
-            context: .
+                - "traefik.port=8500"
+                - "traefik.frontend.rule=Host:consul-ui.localhost"
 
     traefik:
         image: traefik:v1.7.9
@@ -62,19 +54,33 @@ services:
                 parallelism: 1
                 delay: 10s
 
-    consul:
-        image: consul:1.4.3
-        command: agent -bootstrap -server -bootstrap-expect=1 -ui
-        environment:
-            - CONSUL_LOCAL_CONFIG={"server":true}
-            - CONSUL_BIND_INTERFACE=eth0
-            - CONSUL_CLIENT_INTERFACE=eth0
+    peer:
+        image: ngalayko/peer
+        command: 
+            - "--udp4_multicast=" 
+            - "--udp6_multicast="
+        networks: 
+            - p2p
+        build:
+            dockerfile: ./Dockerfile.peer
+            context: .
+
+    dispatcher: 
+        image: ngalayko/dispatcher
+        command:
+            - "--jwt_secret=secret"
+            - "--peer_service=messenger_peer"
+            - "--log_level=debug"
+            - "--buffer=0"
         networks:
             - p2p
+        build:
+            dockerfile: ./Dockerfile.dispatcher
+            context: .
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
         deploy:
             replicas: 1
-            restart_policy:
-                condition: any
             labels:
-                - "traefik.port=8500"
-                - "traefik.frontend.rule=Host:consul-ui.localhost"
+                - "traefik.port=20000"
+                - "traefik.frontend.rule=Host:localhost"

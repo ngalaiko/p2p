@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"log"
+	"os"
 	"runtime"
 	"strings"
 )
@@ -61,7 +62,8 @@ func (l *Logger) Error(format string, v ...interface{}) {
 
 // Panic prints panic level log and panics.
 func (l *Logger) Panic(format string, v ...interface{}) {
-	panic(fmt.Sprintf(fmt.Sprintf("| PANIC | %s | %s%s", location(), l.prefix, format), v...))
+	log.Printf(fmt.Sprintf("| PANIC | %s | %s%s", location(), l.prefix, format), v...)
+	os.Exit(2)
 }
 
 func location() string {

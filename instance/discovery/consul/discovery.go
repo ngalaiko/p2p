@@ -148,6 +148,7 @@ func (d *Discovery) register() error {
 	localAddr := strings.Split(addr[0].String(), "/")[0]
 
 	reg := &consul.AgentServiceRegistration{
+		ID:      d.self.ID,
 		Name:    d.self.ID,
 		Port:    d.self.UIPort,
 		Address: localAddr,

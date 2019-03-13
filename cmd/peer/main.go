@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/ngalayko/p2p/client"
@@ -23,13 +24,19 @@ var (
 	discoveryInterval = flag.Duration("discovery_interval", 1*time.Second, "interval to send discovery broadcast")
 	statisPath        = flag.String("static_path", "./client/public", "path to static files for ui")
 	keySize           = flag.Int("key_size", 1024, "private key size")
+	delay             = flag.Duration("delay", time.Second, "max delay before start")
 )
 
 func main() {
 	flag.Parse()
 
-	log := logger.New(logger.ParseLevel(*logLevel))
-	log.Prefix("main").Info("starting...")
+	log := logger.New(logger.ParseLevel(*logLevel)).Prefix("main")
+	log.Info("starting...")
+
+	rand.Seed(time.Now().Unix())
+	d := time.Duration(rand.Intn(int(*delay))) * time.Nanosecond
+	log.Info("waiting for %s", d)
+	time.Sleep(d)
 
 	inst := instance.New(
 		log,

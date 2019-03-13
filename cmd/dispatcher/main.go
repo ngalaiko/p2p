@@ -12,28 +12,30 @@ var (
 	logLevel        = flag.String("log_level", "info", "log level [debug|info|warning|error|panic]")
 	port            = flag.String("port", "20000", "port to listen")
 	jwtSecret       = flag.String("jwt_secret", "secret", "secret to sign jwt tokens with")
-	peerImageName   = flag.String("image_name", "docker.io/ngalayko/peer", "name of the peer image to pull")
-	peerNetworkName = flag.String("network_name", "p2p", "name of the peer docker network")
+	peerServiceName = flag.String("peer_service", "", "name of the peer service to scale")
 	consulURL       = flag.String("consul", "consul:8500", "url to contact consul catalog")
 	staticPath      = flag.String("staticPath", "./dispatcher/public", "path to static files")
 	buffer          = flag.Int("buffer", 3, "number peers to create in advance")
-	peerKeySize     = flag.Int("peer_key_size", 1096, "key size for peers")
 )
 
 func main() {
 	flag.Parse()
 
+	log := logger.New(logger.ParseLevel(*logLevel))
+
+	if *peerServiceName == "" {
+		log.Panic("peer service name can not be empty")
+	}
+
 	ctx := context.Background()
 
 	d := dispatcher.New(
 		ctx,
-		logger.New(logger.ParseLevel(*logLevel)),
+		log,
 		*jwtSecret,
-		*peerImageName,
-		*peerNetworkName,
+		*peerServiceName,
 		*consulURL,
 		*buffer,
-		*peerKeySize,
 	)
 
 	if err := d.Start(ctx, *port, *staticPath); err != nil {
