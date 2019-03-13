@@ -179,7 +179,7 @@ function updateUnread(peer, diff) {
 }
 
 function connectWs() {
-    let wsAddr = 'ws://' + document.location.host + '/ws'
+    let wsAddr = 'ws' + document.location.protocol.replace("http", '') + '//' + document.location.host + '/ws'
     let conn = new ReconnectingWebSocket(wsAddr);
     conn.onopen = function () {
       console.log('connected')
