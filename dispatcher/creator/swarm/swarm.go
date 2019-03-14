@@ -19,6 +19,8 @@ import (
 	"github.com/ngalayko/p2p/logger"
 )
 
+const consulHealthy = "passing"
+
 // Swarm can create a new peer service in the docker swarm.
 type Swarm struct {
 	logger *logger.Logger
@@ -215,6 +217,11 @@ func (s *Swarm) queryServices(ctx context.Context) (map[string]*consul.AgentServ
 }
 
 func (s *Swarm) parsePeer(service *consul.AgentService) (*peers.Peer, *url.URL, error) {
+	health, _, err := s.consulCli.Agent().AgentHealthServiceByID(service.ID)
+	if health != consulHealthy {
+		return nil, nil, fmt.Errorf("service %s status is %s", service.ID, health)
+	}
+
 	host := fmt.Sprintf("http://%s:%d", service.Address, service.Port)
 	response, err := http.Get(fmt.Sprintf("%s/healthcheck", host))
 	if err != nil {
