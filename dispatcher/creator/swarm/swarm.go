@@ -28,9 +28,8 @@ type Swarm struct {
 
 	peerServiceName string
 
-	creatingGuard *sync.Mutex
-
-	newPeers chan *peers.Peer
+	peersGuard *sync.RWMutex
+	knownPeers map[string]bool
 }
 
 // New is a swarm creator constructor.
@@ -59,30 +58,67 @@ func New(
 		log.Panic("can't connect to consul: %s", err)
 	}
 
-	s := &Swarm{
+	swarm := &Swarm{
 		logger:          log,
 		swarmCli:        swarmCli,
 		consulCli:       consulCli,
 		peerServiceName: peerServiceName,
-		newPeers:        make(chan *peers.Peer),
-		creatingGuard:   &sync.Mutex{},
+		peersGuard:      &sync.RWMutex{},
 	}
 
-	go func() {
-		if err := s.watchPeers(ctx); err != nil {
-			s.logger.Error("error watching peers: %s", err)
-		}
-	}()
+	ss, err := swarm.queryServices(ctx)
+	if err != nil {
+		log.Panic("failed to list consul services: %s", err)
+	}
 
-	return s
+	swarm.knownPeers = make(map[string]bool, len(ss))
+	for _, s := range ss {
+		swarm.knownPeers[s.ID] = false
+	}
+
+	return swarm
 }
 
 // Create implements Creator.
 // creates a new docker service in a swarm cluster.
 func (s *Swarm) Create(ctx context.Context) (*peers.Peer, *url.URL, error) {
+	if err := s.createPeer(ctx); err != nil {
+		return nil, nil, fmt.Errorf("error creating peer: %s", err)
+	}
+
+	start := time.Now()
+
+	newPeer, u, err := s.waitForNewPeer(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error while waiting for a new peer: %s", err)
+	}
+
+	s.logger.Info("peer %s took %s to start", newPeer.ID, time.Since(start))
+	return newPeer, u, nil
+}
+
+func (s *Swarm) createPeer(ctx context.Context) error {
+	s.peersGuard.RLock()
+
+	s.logger.Debug("looking for unused peers")
+	for _, inUse := range s.knownPeers {
+		if inUse {
+			continue
+		}
+
+		s.logger.Debug("found unused peer")
+
+		s.peersGuard.RUnlock()
+
+		return nil
+	}
+	s.peersGuard.RUnlock()
+
+	s.logger.Debug("no unused peers")
+
 	peerService, err := s.getPeersService(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("can't get peer service: %s", err)
+		return fmt.Errorf("can't get peer service: %s", err)
 	}
 
 	before := *peerService.Spec.Mode.Replicated.Replicas
@@ -92,7 +128,6 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, *url.URL, error) {
 
 	*peerService.Spec.Mode.Replicated.Replicas++
 
-	s.creatingGuard.Lock()
 	resp, err := s.swarmCli.ServiceUpdate(
 		ctx,
 		peerService.ID,
@@ -102,31 +137,80 @@ func (s *Swarm) Create(ctx context.Context) (*peers.Peer, *url.URL, error) {
 		peerService.Spec,
 		types.ServiceUpdateOptions{},
 	)
-	s.creatingGuard.Unlock()
-
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to update service %s: %s", s.peerServiceName, err)
+		return fmt.Errorf("failed to update service %s: %s", s.peerServiceName, err)
 	}
 
 	for _, w := range resp.Warnings {
 		s.logger.Warning(w)
 	}
 
-	start := time.Now()
-	newPeer := <-s.newPeers
-	s.logger.Info("peer %s took %s to start", newPeer.ID, time.Since(start))
+	return nil
+}
 
-	for _, ip := range newPeer.Addrs.Map() {
-		u, err := url.Parse(fmt.Sprintf("http://%s:%d", ip, newPeer.UIPort))
+func (s *Swarm) waitForNewPeer(ctx context.Context) (*peers.Peer, *url.URL, error) {
+	s.logger.Info("waiting for a new peer")
+
+	getNew := func(ctx context.Context) (*peers.Peer, *url.URL, error) {
+		services, err := s.consulCli.Agent().Services()
 		if err != nil {
-			return nil, nil, fmt.Errorf("can't parse url for %s: %s", newPeer.ID, err)
+			return nil, nil, fmt.Errorf("failed to list consul services: %s", err)
 		}
-		return newPeer, u, nil
+		for _, service := range services {
+			p, u, err := s.processPeer(service)
+			if err != nil {
+				s.logger.Error("%s: %s", service.ID, err)
+				continue
+			}
+			return p, u, nil
+		}
+		return nil, nil, fmt.Errorf("no valid peers found")
 	}
-	return nil, nil, fmt.Errorf("there are no known addreses for %s", newPeer.ID)
+
+	if p, u, err := getNew(ctx); err == nil {
+		return p, u, nil
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, nil, fmt.Errorf("cancelled")
+		case <-time.Tick(time.Second):
+			p, u, err := getNew(ctx)
+			if err == nil {
+				return p, u, nil
+			}
+			s.logger.Error("failed to get new peer: %s", err)
+		}
+	}
+}
+
+func (s *Swarm) processPeer(service *consul.AgentService) (*peers.Peer, *url.URL, error) {
+	s.peersGuard.Lock()
+	defer s.peersGuard.Unlock()
+
+	if s.knownPeers[service.ID] {
+		return nil, nil, fmt.Errorf("already in use")
+	}
+
+	peer, u, err := s.parsePeer(service)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error parsing peer %s: %s", service.ID, err)
+	}
+
+	s.knownPeers[service.ID] = true
+
+	return peer, u, nil
 }
 
 func (s *Swarm) queryServices(ctx context.Context) (map[string]*consul.AgentService, error) {
+	ss, err := s.consulCli.Agent().Services()
+	if err == nil {
+		return ss, nil
+	}
+
+	s.logger.Info("waiting for consul")
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -141,88 +225,64 @@ func (s *Swarm) queryServices(ctx context.Context) (map[string]*consul.AgentServ
 	}
 }
 
-func (s *Swarm) watchPeers(ctx context.Context) error {
-	ss, err := s.queryServices(ctx)
+func (s *Swarm) parsePeer(service *consul.AgentService) (*peers.Peer, *url.URL, error) {
+	host := fmt.Sprintf("http://%s:%d", service.Address, service.Port)
+	response, err := http.Get(fmt.Sprintf("%s/healthcheck", host))
 	if err != nil {
-		return fmt.Errorf("failed to list consul services: %s", err)
-	}
-
-	knownServices := make(map[string]bool, len(ss))
-	for _, s := range ss {
-		knownServices[s.ID] = true
-	}
-
-	for {
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("cancelled")
-		case <-time.Tick(time.Second):
-			services, err := s.consulCli.Agent().Services()
-			if err != nil {
-				s.logger.Error("failed to list consul services: %s", err)
-				continue
-			}
-			for _, service := range services {
-				if knownServices[service.ID] {
-					continue
-				}
-
-				peer, err := s.parsePeer(service)
-				if err != nil {
-					s.logger.Error("error parsing peer %s: %s", service.ID, err)
-					continue
-				}
-
-				knownServices[service.ID] = true
-
-				go func() {
-					s.newPeers <- peer
-				}()
-			}
-		}
-	}
-}
-
-func (s *Swarm) parsePeer(service *consul.AgentService) (*peers.Peer, error) {
-	response, err := http.Get(fmt.Sprintf("http://%s:%d/healthcheck", service.Address, service.Port))
-	if err != nil {
-		return nil, fmt.Errorf("can't get healthcheck response from %s: %s", service.ID, err)
+		return nil, nil, fmt.Errorf("can't get healthcheck response from %s: %s", service.ID, err)
 	}
 
 	bytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading %s response: %s", service.ID, err)
+		return nil, nil, fmt.Errorf("error reading %s response: %s", service.ID, err)
 	}
 	defer response.Body.Close()
 
 	newPeer := &peers.Peer{}
 	if err := newPeer.Unmarshal(bytes); err != nil {
-		return nil, fmt.Errorf("can't unmarshal response from %s: %s", service.ID, err)
+		return nil, nil, fmt.Errorf("can't unmarshal response from %s: %s", service.ID, err)
 	}
 
 	newPeer.Addrs.Add(net.IP(service.Address))
-	return newPeer, nil
 
+	u, err := url.Parse(host)
+	if err != nil {
+		return nil, nil, fmt.Errorf("can't parse url: %s", err)
+	}
+
+	return newPeer, u, nil
 }
 
 func (s *Swarm) getPeersService(ctx context.Context) (*swarm.Service, error) {
+	get := func(ctx context.Context) (*swarm.Service, error) {
+		services, err := s.swarmCli.ServiceList(ctx, types.ServiceListOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list services: %s", err)
+		}
+
+		for _, service := range services {
+			if service.Spec.Name == s.peerServiceName {
+				return &service, nil
+			}
+		}
+		return nil, fmt.Errorf("service %s not found", s.peerServiceName)
+	}
+
+	if s, err := get(ctx); err == nil {
+		return s, nil
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, fmt.Errorf("cancelled")
 		case <-time.Tick(time.Second):
-			services, err := s.swarmCli.ServiceList(ctx, types.ServiceListOptions{})
+			service, err := get(ctx)
 			if err != nil {
-				return nil, fmt.Errorf("failed to list services: %s", err)
+				s.logger.Error("failed to get service: %s", s.peerServiceName)
+				continue
 			}
-
-			for _, service := range services {
-				if service.Spec.Name == s.peerServiceName {
-					return &service, nil
-				}
-			}
-
-			continue
+			return service, nil
 		}
 	}
 }
