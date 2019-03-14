@@ -64,6 +64,8 @@ services:
         build:
             dockerfile: ./Dockerfile.peer
             context: .
+        deploy:
+            replicas: 0
 
     dispatcher: 
         image: ngalayko/dispatcher
@@ -71,7 +73,7 @@ services:
             - "--jwt_secret=secret"
             - "--peer_service=messenger_peer"
             - "--log_level=debug"
-            - "--buffer=0"
+            - "--buffer=3"
         networks:
             - p2p
         build:

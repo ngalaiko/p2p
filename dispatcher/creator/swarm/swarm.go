@@ -58,25 +58,14 @@ func New(
 		log.Panic("can't connect to consul: %s", err)
 	}
 
-	swarm := &Swarm{
+	return &Swarm{
 		logger:          log,
 		swarmCli:        swarmCli,
 		consulCli:       consulCli,
 		peerServiceName: peerServiceName,
 		peersGuard:      &sync.RWMutex{},
+		knownPeers:      map[string]bool{},
 	}
-
-	ss, err := swarm.queryServices(ctx)
-	if err != nil {
-		log.Panic("failed to list consul services: %s", err)
-	}
-
-	swarm.knownPeers = make(map[string]bool, len(ss))
-	for _, s := range ss {
-		swarm.knownPeers[s.ID] = false
-	}
-
-	return swarm
 }
 
 // Create implements Creator.
