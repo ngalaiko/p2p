@@ -16,5 +16,6 @@ html, body {
 }
 
 .chat {
-    width: 100%;
+    overflow-y: scroll;
+    padding: 1%;
 }

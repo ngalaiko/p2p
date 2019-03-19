@@ -138,12 +138,15 @@ function addMessage(msg) {
 
   if (msg.from.id !== self.id) {
     message.className += ' text-left'
-    getPeerChat(msg.from).appendChild(message)
     updateUnread(msg.from, 1)
   } else {
     message.className += ' text-right'
-    getPeerChat(msg.to).appendChild(message)
   }
+
+  let chat = getPeerChat(msg.to)
+  chat.appendChild(message)
+
+  chat.scrollTop = chat.scrollHeight - chat.clientHeight
 }
 
 function selectPeerContact(peer) {
