@@ -136,14 +136,16 @@ function addMessage(msg) {
   message.className = 'm-2'
   message.innerHTML = msg.text
 
+  var chat
   if (msg.from.id !== self.id) {
     message.className += ' text-left'
+    chat = getPeerChat(msg.from)
     updateUnread(msg.from, 1)
   } else {
+    chat = getPeerChat(msg.to)
     message.className += ' text-right'
   }
 
-  let chat = getPeerChat(msg.to)
   chat.appendChild(message)
 
   chat.scrollTop = chat.scrollHeight - chat.clientHeight
